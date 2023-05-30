@@ -1,0 +1,10 @@
+name: todo
+on:
+  workflow_dispatch:
+jobs:
+  todo:
+    name: Echo
+    steps:
+      - name: Hello, world!
+        run: |
+          echo "Hello, world!"
