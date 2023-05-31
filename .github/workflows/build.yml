@@ -1,6 +1,10 @@
 name: build
 on:
   workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,3 +15,19 @@ jobs:
         run: |
           ls ${{github.workspace}}/build.sh
           source ${{github.workspace}}/build.sh
+      - name: pages
+        uses: actions/configure-pages@v3
+      - name: upload
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ${{github.workspace}}/pigweed/out/docs/gen/docs/html
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    needs: build
+    runs-on: ubuntu-latest
+    name: deploy
+    steps:
+      - name: deploy
+        uses: actions/deploy-pages@v1
