@@ -35,12 +35,11 @@ function hack_palmweed_into_docs_repo() {
 function build_docs() {
     cd pigweed
     source activate.sh
-    [ -d out ] && rm -rf out
     gn gen out
     ninja -C out docs
     deactivate
     cd ..
-    mv pigweed/out/docs/gen/docs/html/embeddings src/embeddings/data
+    # mv pigweed/out/docs/gen/docs/html/embeddings src/embeddings/data
 }
 
 bootstrap_docs_repo
