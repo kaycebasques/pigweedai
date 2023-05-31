@@ -17,7 +17,7 @@ from hashlib import md5
 from json import dump, load
 from copy import deepcopy
 from os.path import exists, join
-from os import makedirs
+from os import makedirs, remove
 from glob import glob
 
 def get_data_dir(app):
@@ -43,23 +43,27 @@ def prepare_for_embeddings(app, doctree, docname):
         with open(path, 'w') as f:
             dump(data, f, indent=4)
 
-# def merge(app, exception):
-#     data = {}
-#     for file in glob(f'{get_data_dir(app)}/*.json'):
-#         with open(file, 'r') as f:
-#             file_data = load(f)
-#         checksum = file_data['checksum']
-#         text = file_data['text']
-#         path = file_data['path']
-#         data[checksum] = path
-#     with open(f'{get_data_dir(app)}/data.json', 'w') as f:
-#         dump(data, f)
-#     print(f'{get_data_dir(app)}/data.json')
+def merge(app, exception):
+    data = {}
+    for file_path in glob(f'{get_data_dir(app)}/*.json'):
+        with open(file_path, 'r') as f:
+            file_data = load(f)
+        checksum = file_data['checksum']
+        text = file_data['text']
+        path = file_data['path']
+        data[checksum] = {
+            'text': text,
+            'path': path,
+            'checksum': checksum
+        }
+        remove(file_path)
+    with open(f'{get_data_dir(app)}/data.json', 'w') as f:
+        dump(data, f)
 
 def setup(app):
     app.connect('builder-inited', init)
     app.connect('doctree-resolved', prepare_for_embeddings)
-    # app.connect('build-finished', merge)
+    app.connect('build-finished', merge)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,
