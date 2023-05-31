@@ -1,6 +1,6 @@
 # palmweed
 
-https://github.com/firebase/functions-samples/blob/main/Node/quickstarts/uppercase-firestore/functions/index.js
+https://firebase.google.com/docs/functions/get-started?gen=2nd#python-preview
 
 https://github.com/firebase/firebase-functions-python
 
