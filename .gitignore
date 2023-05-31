@@ -1,2 +1,4 @@
 pigweed
 src/embeddings/data
+__pycache__
+venv
