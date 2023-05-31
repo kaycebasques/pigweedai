@@ -1,7 +1,7 @@
 from firebase_functions import https_fn
 from firebase_admin import initialize_app
 from json import load
-from flask import Flask
+from flask import Flask, request
 import google.generativeai as palm
 
 with open('env.json', 'r') as f:
@@ -13,9 +13,10 @@ initialize_app()
 app = Flask(__name__)
 palm.configure(api_key=env['palm'])
 
-@app.get('/chat')
+@app.post('/api/query')
 def chat():
-    response = palm.chat(messages='Hello, PaLM! Are you there?')
+    message = request.get_json()['query']
+    response = palm.chat(messages=message)
     return response.last
 
 @https_fn.on_request()
