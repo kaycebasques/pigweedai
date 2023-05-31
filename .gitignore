@@ -1,4 +1,4 @@
 pigweed
-src/embeddings/data
 __pycache__
 venv
+src/firebase/functions/data.json
