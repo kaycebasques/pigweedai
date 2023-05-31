@@ -2,19 +2,21 @@ from firebase_functions import https_fn
 from firebase_admin import initialize_app
 from json import load
 from flask import Flask
+import google.generativeai as palm
 
-initialize_app()
-app = Flask(__name__)
-
+with open('env.json', 'r') as f:
+    env = load(f)
 with open('data.json', 'r') as f:
     data = load(f)
 
-@app.get('/data')
-def get_data():
-    content = ''
-    for checksum in data:
-        content = f'{content} {checksum}'
-    return content
+initialize_app()
+app = Flask(__name__)
+palm.configure(api_key=env['palm'])
+
+@app.get('/chat')
+def chat():
+    response = palm.chat(messages='Hello, PaLM! Are you there?')
+    return response.last
 
 @https_fn.on_request()
 def server(req: https_fn.Request) -> https_fn.Response:

@@ -13,6 +13,7 @@ firebase-functions==0.1.0
 Flask==2.3.2
 Flask-Cors==3.0.10
 functions-framework==3.4.0
+google-ai-generativelanguage==0.2.0
 google-api-core==2.11.0
 google-api-python-client==2.88.0
 google-auth==2.19.0
@@ -22,6 +23,7 @@ google-cloud-firestore==2.11.1
 google-cloud-storage==2.9.0
 google-crc32c==1.5.0
 google-events==0.7.0
+google-generativeai==0.1.0
 google-resumable-media==2.5.0
 googleapis-common-protos==1.59.0
 grpcio==1.54.2
