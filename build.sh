@@ -49,4 +49,4 @@ function build_docs() {
 clean
 bootstrap_docs_repo
 hack_palmweed_into_docs_repo
-# build_docs
+build_docs
