@@ -1,12 +1,12 @@
-name: boil_the_ocean
+name: build
 on:
   workflow_dispatch:
 jobs:
-  boil_the_ocean:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v3
       - name: run
         run: |
-          source ${{github.workspace}}/boil_the_ocean.sh
+          source ${{github.workspace}}/build.sh
