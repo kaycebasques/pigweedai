@@ -60,7 +60,7 @@ function generateResponse() {
     headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
     body: JSON.stringify({'query': getQuery()})
   };
-  fetch('/api/query', options)
+  fetch('https://server-ic22qaceya-uc.a.run.app/api/query', options)
       .then(response => response.json())
       .then(json => render(json));
 }
