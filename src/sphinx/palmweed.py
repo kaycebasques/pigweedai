@@ -20,42 +20,35 @@ from os.path import exists, join
 from os import makedirs
 from glob import glob
 
-data_dir = '/tmp/embeddings'
+def get_data_dir(app):
+    return f'{app.outdir}/embeddings'
 
 def init(app):
-    with open('test.txt', 'w') as f:
-        f.write('Hello, world!\n')
+    data_dir = get_data_dir(app)
     if not exists(data_dir):
         makedirs(data_dir)
 
 def prepare_for_embeddings(app, doctree, docname):
-    data = {'docname': docname, 'sections': []}
     clone = deepcopy(doctree)
-    text = clone.astext()
-    checksum = md5(text.encode('utf-8')).hexdigest()
-    with open('test.txt', 'a') as f:
-        f.write(f'{docname}\n')
-    # for section in clone.traverse(nodes.section):
-    #     section_data = {}
-    #     text = section.astext()
-    #     text = text.replace('\n', ' ')
-    #     checksum = md5(text.encode('utf-8')).hexdigest()
-    #     section_data = {
-    #         'text': text,
-    #         'checksum': checksum,
-    #     }
-    #     data['sections'].append(section_data)
-    # docname_checksum = md5(docname.encode('utf-8')).hexdigest()
-    # filename = f'{docname_checksum}.json'
-    # data_file = join(data_dir, filename)
-    # with open(data_file, 'w') as f:
-    #     dump(data, f, indent=2)
+    for section in clone.traverse(nodes.section):
+        text = section.astext()
+        checksum = md5(text.encode('utf-8')).hexdigest()
+        data = {
+            'text': text,
+            'docname': docname,
+            'checksum': checksum,
+            'path': app.builder.get_target_uri(docname),
+        }
+        name = f'{checksum}.json'
+        path = f'{get_data_dir(app)}/{name}'
+        with open(path, 'w') as f:
+            dump(data, f, indent=4)
 
 def setup(app):
     app.connect('builder-inited', init)
     app.connect('doctree-resolved', prepare_for_embeddings)
     return {
-        'version': '0.1',
+        'version': '0.0.0',
         'parallel_read_safe': True,
         'parallel_write_safe': True,
     }

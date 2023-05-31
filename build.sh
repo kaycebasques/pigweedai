@@ -34,6 +34,7 @@ function build_docs() {
     ninja -C out docs
     deactivate
     cd ..
+    mv pigweed/out/docs/gen/docs/html/embeddings src/embeddings/data
 }
 
 bootstrap_docs_repo
