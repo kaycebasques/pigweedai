@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function clean() {
-    [ -d pigweed ] && rm -rf pigweed
-    [ -d src/embeddings/data ] && rm -rf src/embeddings/data
+    [ -d "pigweed" ] && rm -rf pigweed
+    [ -d "src/embeddings/data" ] && rm -rf src/embeddings/data
 }
 
 function bootstrap_docs_repo() {
