@@ -35,7 +35,6 @@ def prepare_for_embeddings(app, doctree, docname):
         checksum = md5(text.encode('utf-8')).hexdigest()
         data = {
             'text': text,
-            'docname': docname,
             'checksum': checksum,
             'path': app.builder.get_target_uri(docname),
         }
@@ -44,9 +43,23 @@ def prepare_for_embeddings(app, doctree, docname):
         with open(path, 'w') as f:
             dump(data, f, indent=4)
 
+def merge(app, exception):
+    data = {}
+    for file in glob(f'{get_data_dir(app)}/*.json'):
+        with open(file, 'r') as f:
+            file_data = load(f)
+        checksum = file_data['checksum']
+        text = file_data['text']
+        path = file_data['path']
+        data[checksum] = path
+    with open(f'{get_data_dir(app)}/data.json', 'w') as f:
+        dump(data, f)
+    print(f'{get_data_dir(app)}/data.json')
+
 def setup(app):
     app.connect('builder-inited', init)
     app.connect('doctree-resolved', prepare_for_embeddings)
+    app.connect('build-finished', merge)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,
