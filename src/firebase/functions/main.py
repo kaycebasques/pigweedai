@@ -17,7 +17,11 @@ palm.configure(api_key=env['palm'])
 def chat():
     message = request.get_json()['query']
     response = palm.chat(messages=message)
-    return response.last
+    return {
+        'answer': response.last,
+        'context': 'N/A',
+        'vanilla': 'N/A'
+    }
 
 @https_fn.on_request()
 def server(req: https_fn.Request) -> https_fn.Response:
