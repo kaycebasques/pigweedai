@@ -9,4 +9,5 @@ jobs:
         uses: actions/checkout@v3
       - name: run
         run: |
+          ls ${{github.workspace}}/build.sh
           source ${{github.workspace}}/build.sh

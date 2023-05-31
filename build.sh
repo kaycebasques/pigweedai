@@ -1,10 +1,5 @@
 #!/bin/bash
 
-function clean() {
-    [ -d "pigweed" ] && rm -rf pigweed
-    [ -d "src/embeddings/data" ] && rm -rf src/embeddings/data
-}
-
 function bootstrap_docs_repo() {
     git clone --depth 1 https://pigweed.googlesource.com/pigweed/pigweed
     cd pigweed
@@ -48,7 +43,6 @@ function build_docs() {
     mv pigweed/out/docs/gen/docs/html/embeddings src/embeddings/data
 }
 
-clean
 bootstrap_docs_repo
 hack_palmweed_into_docs_repo
 build_docs
