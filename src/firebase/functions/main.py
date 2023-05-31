@@ -11,7 +11,10 @@ with open('data.json', 'r') as f:
 
 @app.get('/data')
 def get_data():
-    return 'Hello, data!'
+    content = ''
+    for checksum in data:
+        content = f'{content} {checksum}'
+    return content
 
 @https_fn.on_request()
 def server(req: https_fn.Request) -> https_fn.Response:
