@@ -1,7 +1,7 @@
 pigweed
 __pycache__
 venv
-data.json
+database.json
 env.json
 service_account.json
 sandbox.py
