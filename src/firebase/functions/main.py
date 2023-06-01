@@ -22,6 +22,8 @@ with open('database.json', 'r') as f:
 
 # palm.list_models() shows that this is the limit for models/embedding-gecko-001.
 token_limit = 1024
+embedding_model = 'models/embedding-gecko-001'
+chat_model = 'models/text-bison-001'
 
 # service_account.json has the Firebase service account credentials.
 # It is not checked into this repo and needs to be in the same directory
@@ -83,7 +85,7 @@ def chat():
     try:
         message = request.get_json()['message']
         embedding = palm.generate_embeddings(text=message,
-                model='models/embedding-gecko-001')['embedding']
+                model=embedding_model)['embedding']
         return {'data': closest(embedding)}
     except Exception as e:
         return {'error': print_exc()}
