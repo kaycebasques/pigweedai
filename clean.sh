@@ -1,4 +1,4 @@
 #!/bin/bash
 
 [ -d pigweed ] && rm -rf pigweed
-[ -d src/firebase/functions/data ] && rm -rf src/firebase/functions/data
+[ -f src/firebase/functions/database.json ] && rm -rf src/firebase/functions/database.json
