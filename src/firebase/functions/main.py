@@ -4,6 +4,7 @@ from json import load
 from flask import Flask, request
 from flask_cors import CORS
 import google.generativeai as palm
+from datetime import datetime
 
 with open('env.json', 'r') as f:
     env = load(f)
@@ -37,6 +38,7 @@ def batch_generate_embeddings():
         doc = embeddings_collection.document(checksum)
         doc.set(firebase_data)
         n += 1
+    return datetime.now()
 
 @app.post('/api/query')
 def chat():
