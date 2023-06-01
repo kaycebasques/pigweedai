@@ -1,27 +1,3 @@
-# This function just updates a couple lines in the configuration files
-# of //pigweed. If you run this function and then `cd pigweed && git diff`
-# you can see the changes. There are probably more readable ways to do this
-# but this approach is good enough for now.
-# function hack_palmweed_into_docs_repo() {
-#     BEFORE="\'pw_docgen\.sphinx\.module_metadata\',"
-#     AFTER="$BEFORE\n    \'pw_docgen\.sphinx\.palmweed\',"
-#     sed -i "s/$BEFORE/$AFTER/" pigweed/docs/conf.py
-#     cp src/sphinx/palmweed.py pigweed/pw_docgen/py/pw_docgen/sphinx/palmweed.py
-#  
-#     BEFORE="\"pw_docgen\/sphinx\/module\_metadata\.py\","
-#     AFTER="$BEFORE\n    \"pw_docgen\/sphinx\/palmweed\.py\","
-#     sed -i "s/$BEFORE/$AFTER/" pigweed/pw_docgen/py/BUILD.gn
-#  
-#     BEFORE="html_static_path = \[\'docs\/_static\'\]"
-#     AFTER="$BEFORE\nhtml_js_files = \[\'palmweed\.js\'\]"
-#     sed -i "s/$BEFORE/$AFTER/" pigweed/pw_docgen/py/BUILD.gn
-# 
-#     BEFORE="\"\_static\/css\/pigweed\.css\","
-#     AFTER="$BEFORE\n    \"\_static\/palmweed\.js\","
-#     sed -i "s/$BEFORE/$AFTER/" pigweed/docs/BUILD.gn
-#     cp src/sphinx/palmweed.js pigweed/docs/_static/palmweed.js
-# }
-
 def hack(file_path, before, after):
     with open(file_path, 'r') as f:
         text = f.read()
@@ -44,3 +20,11 @@ hack('pigweed/docs/BUILD.gn', before, after)
 before = '"pw_docgen/sphinx/module_metadata.py",'
 after = f'{before} "pw_docgen/sphinx/palmweed.py",'
 hack('pigweed/pw_docgen/py/BUILD.gn', before, after)
+
+before = '"code_of_conduct.rst",'
+after = f'"ask_palm.rst", {before}'
+hack('pigweed/docs/BUILD.gn', before, after)
+
+before = 'Home <self>'
+after = f'{before}\n  docs/ask_palm'
+hack('pigweed/docs/index.rst', before, after)

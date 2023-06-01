@@ -11,6 +11,7 @@ function bootstrap_docs_repo() {
 function hack_palmweed_into_docs_repo() {
     cp src/sphinx/palmweed.js pigweed/docs/_static/palmweed.js
     cp src/sphinx/palmweed.py pigweed/pw_docgen/py/pw_docgen/sphinx/palmweed.py
+    cp src/sphinx/ask_palm.rst pigweed/docs/ask_palm.rst
     python3 hack.py
 }
 
