@@ -82,7 +82,8 @@ def closest(target):
 def chat():
     try:
         message = request.get_json()['message']
-        embedding = palm.generate_embeddings(text=message, model='models/embedding-gecko-001')
+        embedding = palm.generate_embeddings(text=message,
+                model='models/embedding-gecko-001')['embedding']
         return {'data': closest(embedding)}
     except Exception as e:
         return {'error': print_exc()}

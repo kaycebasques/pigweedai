@@ -31,7 +31,7 @@ palm.configure(api_key=env['palm'])
 docs = embeddings.stream()
 for doc in docs:
     doc_data = doc.to_dict()
-    checksum = doc.document_id
+    checksum = doc.id
     if checksum not in database:
         continue
     if 'token_count' in doc_data:
@@ -61,7 +61,8 @@ for checksum in database:
     # There's no point in generating an embedding if the token size of
     # the section's text is larger than the model's token limit.
     if token_count < token_limit:
-        embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+        embedding = palm.generate_embeddings(text=text,
+                model='models/embedding-gecko-001')['embedding']
         new_data['embedding'] = embedding
     doc = embeddings.document(checksum)
     doc.set(new_data)

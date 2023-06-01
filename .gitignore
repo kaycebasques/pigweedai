@@ -5,3 +5,4 @@ database.json
 env.json
 service_account.json
 sandbox.py
+sandbox.sh
