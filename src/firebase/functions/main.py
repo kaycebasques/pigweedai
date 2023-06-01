@@ -1,5 +1,5 @@
 from firebase_functions import https_fn
-from firebase_admin import initialize_app
+from firebase_admin import initialize_app, firestore as firestore_init
 from json import load
 from flask import Flask, request
 from flask_cors import CORS
@@ -11,9 +11,22 @@ with open('data.json', 'r') as f:
     data = load(f)
 
 initialize_app()
+firestore = firestore_init.client()
+embeddings_collection = firestore.collection('embeddings')
 app = Flask(__name__)
 CORS(app)
 palm.configure(api_key=env['palm'])
+
+n = 0
+for checksum in data:
+    if n > 10:
+        continue
+    text = data[checksum]['text']
+    token_count = palm.count_message_tokens(prompt=text, model='models/text-bison-001')['token_count']
+    embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+    doc = embeddings_collection.document(checksum)
+    doc.set({'token_count': token_count, 'embedding': embedding})
+    n += 1
 
 @app.post('/api/query')
 def chat():
