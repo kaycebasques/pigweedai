@@ -1,11 +1,12 @@
 from firebase_functions import https_fn
 from firebase_admin import initialize_app, firestore as firestore_init, credentials
 from json import load
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as palm
 from datetime import datetime
 from time import sleep
+import numpy as np
 
 # Load PaLM API key. env.json is not checked into the repo. It needs
 # to be in the same directory as this main.py file when the Firebase
@@ -44,35 +45,43 @@ for doc in docs:
     if 'embedding' in doc_data:
         database[checksum]['embedding'] = doc_data['embedding']
 
-# Generate token counts and embeddings for any remaining sections that
-# don't have them yet.
-n = 0
-for checksum in database:
-    # Rate limit is 300 requests per minute.
-    if n > 250:
-        sleep(65)
-        n = 0
-        continue
-    section = database[checksum]
-    if 'embedding' in section and 'token_count' in section:
-        continue
-    text = section['text']
-    token_count = palm.count_message_tokens(prompt=text)['token_count']
-    new_data = {'token_count': token_count}
-    # There's no point in generating an embedding if the token size of
-    # the section's text is larger than the model's token limit.
-    if token_count < token_limit:
-        embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
-        new_data['embedding'] = embedding
-    doc = embeddings.document(checksum)
-    doc.set(new_data)
-    n += 1
+def closest(target):
+    # Calculate how far each docs section is from the target query.
+    calculations = []
+    for checksum in database:
+        section = database[checksum]
+        if 'embedding' not in section:
+            continue
+        candidate = section['embedding']
+        distance = np.dot(target, candidate)
+        calculations.append({
+            'distance': distance,
+            'text': section['text'],
+            'token_count': section['token_count'],
+            'path': section['path']
+        })
+    calculations = sorted(calculations, key=lambda item: item['distance'])
+    calculations.reverse()
+    tokens = 0
+    # Keep this below the model's maximum limit so that there is space for the user's
+    # query and for the prompt instructions.
+    limit = 1000
+    matches = []
+    for item in calculations:
+        if tokens > limit:
+            continue
+        if tokens + item['token_count'] > limit:
+            continue
+        matches.append(item)
+        tokens += item['tokens']
+    # TODO: Return all matches, not just the first one.
+    return matches[0]
 
-@app.post('/count_tokens')
-def count_tokens():
-    text = request.get_json()['text']
-    token_count = palm.count_message_tokens(prompt=text)['token_count']
-    return {'token_count': token_count}
+@app.post('/chat')
+def chat():
+    message = request.get_json()['message']
+    embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+    return jsonify(closest(embedding))
 
 @app.post('/api/query')
 def chat():

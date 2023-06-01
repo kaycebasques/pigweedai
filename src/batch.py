@@ -21,7 +21,7 @@ token_limit = 1024
 # service_account.json has the Firebase service account credentials.
 # It is not checked into this repo and needs to be in the same directory
 # as this main.py file when the Firebase Functions are deployed.
-service_account_credentials = credentials.Certificate('service_account.json')
+service_account_credentials = credentials.Certificate('firebase/functions/service_account.json')
 initialize_app(service_account_credentials)
 firestore = firestore_init.client()
 embeddings = firestore.collection('embeddings')
@@ -31,7 +31,7 @@ palm.configure(api_key=env['palm'])
 docs = embeddings.stream()
 for doc in docs:
     doc_data = doc.to_dict()
-    checksum = doc_data['checksum']
+    checksum = doc.document_id
     if checksum not in database:
         continue
     if 'token_count' in doc_data:
