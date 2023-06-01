@@ -74,7 +74,7 @@ def closest(target):
         if tokens + item['token_count'] > limit:
             continue
         matches.append(item)
-        tokens += item['tokens']
+        tokens += item['token_count']
     # TODO: Return all matches, not just the first one.
     return matches
 
