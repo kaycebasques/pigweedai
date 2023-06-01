@@ -57,7 +57,7 @@ def merge(app, exception):
             'checksum': checksum
         }
         remove(file_path)
-    with open(f'{get_data_dir(app)}/data.json', 'w') as f:
+    with open(f'{get_data_dir(app)}/database.json', 'w') as f:
         dump(data, f)
 
 def setup(app):
