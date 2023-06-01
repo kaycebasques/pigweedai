@@ -37,7 +37,7 @@ palm.configure(api_key=env['palm'])
 docs = embeddings.stream()
 for doc in docs:
     doc_data = doc.to_dict()
-    checksum = doc_data['checksum']
+    checksum = doc.id
     if checksum not in database:
         continue
     if 'token_count' in doc_data:
@@ -79,12 +79,15 @@ def closest(target):
 
 @app.post('/chat')
 def chat():
-    message = request.get_json()['message']
-    embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
-    return jsonify(closest(embedding))
+    try:
+        message = request.get_json()['message']
+        embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+        return {'data': closest(embedding)}
+    except Exception as e:
+        return {'error': str(e)}
 
 @app.post('/api/query')
-def chat():
+def query():
     message = request.get_json()['query']
     response = palm.chat(messages=message)
     return {
