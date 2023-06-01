@@ -75,13 +75,13 @@ def closest(target):
         matches.append(item)
         tokens += item['tokens']
     # TODO: Return all matches, not just the first one.
-    return matches[0]
+    return matches
 
 @app.post('/chat')
 def chat():
     try:
         message = request.get_json()['message']
-        embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+        embedding = palm.generate_embeddings(text=message, model='models/embedding-gecko-001')
         return {'data': closest(embedding)}
     except Exception as e:
         return {'error': str(e)}
