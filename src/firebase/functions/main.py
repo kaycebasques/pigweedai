@@ -10,6 +10,9 @@ with open('env.json', 'r') as f:
 with open('data.json', 'r') as f:
     data = load(f)
 
+# palm.list_models() shows that this is the limit for models/embedding-gecko-001.
+token_limit = 1024
+
 service_account_credentials = credentials.Certificate('service_account.json')
 initialize_app(service_account_credentials)
 firestore = firestore_init.client()
@@ -18,16 +21,22 @@ app = Flask(__name__)
 CORS(app)
 palm.configure(api_key=env['palm'])
 
-n = 0
-for checksum in data:
-    if n > 10:
-        continue
-    text = data[checksum]['text']
-    token_count = palm.count_message_tokens(prompt=text, model='models/text-bison-001')['token_count']
-    embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
-    doc = embeddings_collection.document(checksum)
-    doc.set({'token_count': token_count, 'embedding': embedding})
-    n += 1
+@app.get('/batch_generate_embeddings')
+def batch_generate_embeddings():
+    n = 0
+    for checksum in data:
+        if n > 300:
+            continue
+        # TODO: Check if data already exists for this section.
+        text = data[checksum]['text']
+        token_count = palm.count_message_tokens(prompt=text)['token_count']
+        firebase_data = {'token_count': token_count}
+        if token_count < token_limit:
+            embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+            firebase_data['data'] = embedding
+        doc = embeddings_collection.document(checksum)
+        doc.set(firebase_data)
+        n += 1
 
 @app.post('/api/query')
 def chat():
