@@ -7,6 +7,7 @@ import google.generativeai as palm
 from datetime import datetime
 from time import sleep
 import numpy as np
+from traceback import print_exc
 
 # Load PaLM API key. env.json is not checked into the repo. It needs
 # to be in the same directory as this main.py file when the Firebase
@@ -84,7 +85,7 @@ def chat():
         embedding = palm.generate_embeddings(text=message, model='models/embedding-gecko-001')
         return {'data': closest(embedding)}
     except Exception as e:
-        return {'error': str(e)}
+        return {'error': print_exc()}
 
 @app.post('/api/query')
 def query():
