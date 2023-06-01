@@ -40,9 +40,9 @@ def batch_generate_embeddings():
             doc = embeddings_collection.document(checksum)
             doc.set(firebase_data)
             n += 1
-        return datetime.now()
+        return datetime.now().strftime()
     except Exception as e:
-        return e
+        return str(e)
 
 @app.post('/api/query')
 def chat():
