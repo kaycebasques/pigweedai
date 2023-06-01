@@ -22,23 +22,27 @@ app = Flask(__name__)
 CORS(app)
 palm.configure(api_key=env['palm'])
 
-@app.get('/batch_generate_embeddings')
+@app.get('/embeddings')
 def batch_generate_embeddings():
-    n = 0
-    for checksum in data:
-        if n > 300:
-            continue
-        # TODO: Check if data already exists for this section.
-        text = data[checksum]['text']
-        token_count = palm.count_message_tokens(prompt=text)['token_count']
-        firebase_data = {'token_count': token_count}
-        if token_count < token_limit:
-            embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
-            firebase_data['data'] = embedding
-        doc = embeddings_collection.document(checksum)
-        doc.set(firebase_data)
-        n += 1
-    return datetime.now()
+    try:
+        n = 0
+        for checksum in data:
+            # Rate limit is 300.
+            if n > 250:
+                continue
+            # TODO: Check if data already exists for this section.
+            text = data[checksum]['text']
+            token_count = palm.count_message_tokens(prompt=text)['token_count']
+            firebase_data = {'token_count': token_count}
+            if token_count < token_limit:
+                embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+                firebase_data['data'] = embedding
+            doc = embeddings_collection.document(checksum)
+            doc.set(firebase_data)
+            n += 1
+        return datetime.now()
+    except Exception as e:
+        return e
 
 @app.post('/api/query')
 def chat():
