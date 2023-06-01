@@ -1,5 +1,5 @@
 from firebase_functions import https_fn
-from firebase_admin import initialize_app, firestore as firestore_init
+from firebase_admin import initialize_app, firestore as firestore_init, credentials
 from json import load
 from flask import Flask, request
 from flask_cors import CORS
@@ -10,7 +10,8 @@ with open('env.json', 'r') as f:
 with open('data.json', 'r') as f:
     data = load(f)
 
-initialize_app()
+service_account_credentials = credentials.Certificate('service_account.json')
+initialize_app(service_account_credentials)
 firestore = firestore_init.client()
 embeddings_collection = firestore.collection('embeddings')
 app = Flask(__name__)
