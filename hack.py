@@ -26,5 +26,5 @@ after = f'"ask_palm.rst", {before}'
 hack('pigweed/docs/BUILD.gn', before, after)
 
 before = 'Home <self>'
-after = f'{before}\n  docs/ask_palm'
+after = f'docs/ask_palm\n  Home <self>'
 hack('pigweed/docs/index.rst', before, after)
