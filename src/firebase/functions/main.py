@@ -2,6 +2,7 @@ from firebase_functions import https_fn
 from firebase_admin import initialize_app
 from json import load
 from flask import Flask, request
+from flask_cors import CORS
 import google.generativeai as palm
 
 with open('env.json', 'r') as f:
@@ -11,6 +12,7 @@ with open('data.json', 'r') as f:
 
 initialize_app()
 app = Flask(__name__)
+CORS(app)
 palm.configure(api_key=env['palm'])
 
 @app.post('/api/query')
