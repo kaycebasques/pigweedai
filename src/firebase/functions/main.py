@@ -32,6 +32,42 @@ app = Flask(__name__)
 CORS(app)
 palm.configure(api_key=env['palm'])
 
+# Load the token count and embedding data from Firebase into the local database.
+# docs = embeddings.stream()
+for doc in docs:
+    doc_data = doc.to_dict()
+    checksum = doc_data['checksum']
+    if checksum not in database:
+        continue
+    if 'token_count' in doc_data:
+        database[checksum]['token_count'] = doc_data['token_count']
+    if 'embedding' in doc_data:
+        database[checksum]['embedding'] = doc_data['embedding']
+
+# Generate token counts and embeddings for any remaining sections that
+# don't have them yet.
+n = 0
+for checksum in database:
+    # Rate limit is 300 requests per minute.
+    if n > 250:
+        # sleep(65)
+        # n = 0
+        continue
+    section = database[checksum]
+    if 'embedding' in section and 'token_count' in section:
+        continue
+    text = section['text']
+    token_count = palm.count_message_tokens(prompt=text)['token_count']
+    new_data = {'token_count': token_count}
+    # There's no point in generating an embedding if the token size of
+    # the section's text is larger than the model's token limit.
+    if token_count < token_limit:
+        embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
+        new_data['embedding'] = embedding
+    doc = embeddings.document(checksum)
+    doc.set(new_data)
+    n += 1
+
 @app.post('/count_tokens')
 def count_tokens():
     text = request.get_json()['text']
@@ -52,38 +88,3 @@ def chat():
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()
-
-# Load the token count and embedding data from Firebase into the local database.
-# docs = embeddings.stream()
-# for doc in docs:
-#     doc_data = doc.to_dict()
-#     checksum = doc_data['checksum']
-#     if checksum not in database:
-#         continue
-#     if 'token_count' in doc_data:
-#         database[checksum]['token_count'] = doc_data['token_count']
-#     if 'embedding' in doc_data:
-#         database[checksum]['embedding'] = doc_data['embedding']
-
-# Generate token counts and embeddings for any remaining sections that
-# don't have them yet.
-# n = 0
-# for checksum in database:
-#     # Rate limit is 300 requests per minute.
-#     if n > 250:
-#         sleep(65)
-#         n = 0
-#     section = database[checksum]
-#     if 'embedding' in section and 'token_count' in section:
-#         continue
-#     text = section['text']
-#     token_count = palm.count_message_tokens(prompt=text)['token_count']
-#     new_data = {'token_count': token_count}
-#     # There's no point in generating an embedding if the token size of
-#     # the section's text is larger than the model's token limit.
-#     if token_count < token_limit:
-#         embedding = palm.generate_embeddings(text=text, model='models/embedding-gecko-001')
-#         new_data['embedding'] = embedding
-#     doc = embeddings.document(checksum)
-#     doc.set(new_data)
-#     n += 1
