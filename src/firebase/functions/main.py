@@ -33,7 +33,7 @@ CORS(app)
 palm.configure(api_key=env['palm'])
 
 # Load the token count and embedding data from Firebase into the local database.
-# docs = embeddings.stream()
+docs = embeddings.stream()
 for doc in docs:
     doc_data = doc.to_dict()
     checksum = doc_data['checksum']
@@ -50,8 +50,8 @@ n = 0
 for checksum in database:
     # Rate limit is 300 requests per minute.
     if n > 250:
-        # sleep(65)
-        # n = 0
+        sleep(65)
+        n = 0
         continue
     section = database[checksum]
     if 'embedding' in section and 'token_count' in section:
