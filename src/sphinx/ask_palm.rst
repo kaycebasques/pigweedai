@@ -116,11 +116,19 @@ Ask PaLM
                },
                body: JSON.stringify({'messages': window.palmweed.messages})
            };
-           const response = await fetch('https://server-ic22qaceya-uc.a.run.app/chat', options);
+           const url = (new URLSearchParams(window.location.search)).get('debug') === '1' ?
+                   'http://127.0.0.1:5001/palmweed-prototype/us-central1/server/chat' :
+                   'https://server-ic22qaceya-uc.a.run.app/chat';
+           const response = await fetch(url, options);
            const json = await response.json();
            if ('error' in json) {
-               console.log(json.error);
                window.palmweed.send.disabled = false;
+               console.log(json.error);
+               const errorMessage = '(This is an error message from Palmweed prototype. ' +
+                       'This is not a message from PaLM. ' +
+                       'Some kind of error happened in the Palmweed code. ' +
+                       'Sorry about that. Please try again.)';
+               window.palmweed.renderMessage(errorMessage, false)
                return;
            }
            const palmResponse = json.response;

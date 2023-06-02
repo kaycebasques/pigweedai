@@ -93,33 +93,34 @@ def markdown_to_html(markdown):
 @app.post('/chat')
 def chat():
     try:
+        print('Chat request received')
         messages = request.get_json()['messages']
-        print(messages)
         last_message = messages[-1]['content']
+        print('Message: {last_message}')
         embedding = palm.generate_embeddings(text=last_message,
                 model=embedding_model)['embedding']
-        print('embedding generation ok')
-        # TODO: We also need the doc titles if possible.
         data = closest(embedding)
-        print('semantic search ok')
+        print('Semantic search done')
         context = ['Use the following Pigweed documentation in your answer:']
         context += [item['text'] for item in data]
         context = ' '.join(context)
-        print('context munging ok')
         paths = [item['path'] for item in data]
         response = palm.chat(messages=messages, context=context, temperature=0)
-        print('chat ok')
+        print('PaLM response received')
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
-        print('markdown ok')
+        print('HTML generated')
         return {
             'response': html,
             'messages': response.messages,
             'paths': paths
         }
-    except FirebaseError as e:
-        return {'code': e.code, 'error': e.message}
     except Exception as e:
-        return {'error': str(e)}
+        print(f'Exception: {e}')
+        print('Exception stack trace:')
+        print_exc()
+        return {
+            'error': str(e)
+        }
 
 @https_fn.on_request(timeout_sec=120, memory=MemoryOption.MB_512)
 def server(req: https_fn.Request) -> https_fn.Response:
