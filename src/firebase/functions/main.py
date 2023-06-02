@@ -9,6 +9,7 @@ from datetime import datetime
 from time import sleep
 import numpy as np
 from traceback import print_exc
+from markdown import markdown
 
 # Load PaLM API key. env.json is not checked into the repo. It needs
 # to be in the same directory as this main.py file when the Firebase
