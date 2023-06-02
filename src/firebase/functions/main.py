@@ -92,7 +92,7 @@ def chat():
         paths = [item['path'] for item in data]
         # TODO: Include the history and data and so on.
         response = palm.chat(messages=message, context=context)
-        history = response['messages']
+        history = response.messages
         return {
             'response': response.last,
             'context': context,
