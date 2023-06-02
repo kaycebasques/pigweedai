@@ -111,7 +111,7 @@ Ask PaLM
                return;
            }
            const palmResponse = json.response;
-           window.palmweed.messages = json.history;
+           window.palmweed.messages = json.messages;
            window.palmweed.renderMessage(palmResponse, false);
            window.palmweed.textbox.placeholder = 'Ask PaLM something...';
            window.palmweed.send.disabled = false;
