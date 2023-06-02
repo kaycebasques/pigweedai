@@ -1,4 +1,5 @@
-from firebase_functions import https_fn, options
+from firebase_functions import https_fn
+from firebase_functions.options import MemoryOption
 from firebase_admin import initialize_app, firestore as firestore_init, credentials
 from firebase_admin.exceptions import FirebaseError
 from json import load
@@ -92,60 +93,29 @@ def markdown_to_html(markdown):
 @app.post('/chat')
 def chat():
     try:
-        message = request.get_json()['message']
-        print(f'message: {message}')
-        # TODO
-        # history = request.get_json()['history']
-        # print(f'history: {history}')
-        # new_message = history.append({'author': '0', 'content': message})
-        new_message = [
-            {
-                'author': '0',
-                'content': message
-            }
-        ]
-        embedding = palm.generate_embeddings(text=message,
+        messages = request.get_json()['messages']
+        last_message = messages[-1]['content']
+        embedding = palm.generate_embeddings(text=last_message,
                 model=embedding_model)['embedding']
         # TODO: We also need the doc titles if possible.
         data = closest(embedding)
-        instructions = [
-            'You are a friendly expert in the Pigweed software project.',
-            'You must base your answer off the following Pigweed documentation.',
-            'If you are unsure of the accuracy of your answer, you should decline to answer.'
-        ]
-        instructions += [item['text'] for item in data]
-        context = ' '.join(instructions)
+        context = ['Use the following Pigweed documentation in your answer:']
+        context += [item['text'] for item in data]
+        context = ' '.join(context)
         paths = [item['path'] for item in data]
-        response = palm.chat(messages=new_message, context=context, temperature=0)
-        print(response.last)
+        response = palm.chat(messages=messages, context=context, temperature=0)
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
-        history = response.messages
         return {
             'response': html,
-            'context': context,
-            'history': history,
+            'messages': response.messages,
             'paths': paths
         }
     except FirebaseError as e:
-        print(e.code)
-        print(e.message)
         return {'code': e.code, 'error': e.message}
     except Exception as e:
-        print(e)
         return {'error': str(e)}
 
-@app.post('/api/query')
-def query():
-    message = request.get_json()['query']
-    response = palm.chat(messages=message)
-    return {
-        'answer': response.last,
-        'context': 'N/A',
-        'vanilla': 'N/A'
-    }
-
-# https://firebase.google.com/docs/reference/functions/2nd-gen/python/firebase_functions.options#memoryoption
-@https_fn.on_request(timeout_sec=120, memory=options.MemoryOption.MB_512)
+@https_fn.on_request(timeout_sec=120, memory=MemoryOption.MB_512)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()
