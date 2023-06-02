@@ -6,15 +6,14 @@ permissions:
   pages: write
   id-token: write
 jobs:
-  build:
+  bootstrap:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v3
       - name: run
         run: |
-          ls ${{github.workspace}}/build.sh
-          source ${{github.workspace}}/build.sh
+          source ${{github.workspace}}/bootstrap.sh
       - name: pages
         uses: actions/configure-pages@v3
       - name: upload

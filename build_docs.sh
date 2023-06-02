@@ -1,10 +1,9 @@
 #!/bin/bash
 
-function bootstrap_docs_repo() {
-    git clone --depth 1 https://pigweed.googlesource.com/pigweed/pigweed
+function reset_docs_repo() {
     cd pigweed
-    source bootstrap.sh
-    deactivate
+    git restore .
+    git clean -f -d
     cd ..
 }
 
@@ -26,6 +25,6 @@ function build_docs() {
             src/firebase/functions/database.json
 }
 
-bootstrap_docs_repo
+reset_docs_repo
 hack_palmweed_into_docs_repo
 build_docs
