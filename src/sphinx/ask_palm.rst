@@ -8,8 +8,19 @@ Ask PaLM
 
    <style>
        #palmweed-input-container {
-           position: fixed;
-           bottom: 0;
+           width: 100%;
+           max-width: 100%;
+           display: flex;
+           align-items: center;
+           margin-top: 1em;
+       }
+       #palmweed-input-textbox {
+           width: 75%;
+           max-width: 75%;
+           margin-right: 1em;
+       }
+       .palmweed-output-label {
+           font-style: italic;
        }
    </style>
    <div id="palmweed-output"></div>
@@ -18,8 +29,27 @@ Ask PaLM
        <button id="palmweed-input-send">Send</button>
    </div>
    <script>
-       // See palmweed.js.
-       document.querySelector('#palmweed-input-send').addEventListener('click', () => {
-           console.log(document.querySelector('#palmweed-input-textbox').value);
+       let output = document.querySelector('#palmweed-output');
+       let textbox = document.querySelector('#palmweed-input-textbox');
+       document.querySelector('#palmweed-input-send').addEventListener('click', async () => {
+           const message = textbox.value;
+           let label = document.createElement('p');
+           label.textContent = 'You said:';
+           label.classList.add('palmweed-output-label');
+           output.append(label);
+           let messageContainer = document.createElement('div');
+           messageContainer.textContent = message;
+           output.append(messageContainer);
+           const options = {
+               method: 'POST',
+               mode: 'cors',
+               headers: {
+                   'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({message})
+           };
+           const response = await fetch('https://server-ic22qaceya-uc.a.run.app/chat', options);
+           const json = await response.json();
+           console.log(json);
        });
    </script>
