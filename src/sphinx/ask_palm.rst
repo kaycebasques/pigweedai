@@ -59,7 +59,7 @@ Ask PaLM
            messages: [
                {
                    'author': 'user',
-                   'content': 'You are a friendly expert in the Pigweed software project. You are going to help me build embedded systems with Pigweed.
+                   'content': 'You are a friendly expert in the Pigweed software project. You are going to help me build embedded systems with Pigweed.',
                },
                {
                    'author': 'palm',
