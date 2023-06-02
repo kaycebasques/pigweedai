@@ -90,23 +90,46 @@ def get_docs_context(message):
 def markdown_to_html(markdown):
     pass
 
+def normalize_text(text):
+    return text.replace('\n', ' ')
+
+def generate_summary(context):
+    print('Summary generation request received')
+    instructions = [
+        'The user is trying to develop embedded systems with the Pigweed software project.',
+        'Generate a summary of the following Pigweed documentation: ',
+        context
+    ]
+    prompt = ' '.join(instructions)
+    response = palm.generate_text(model='models/text-bison-001',
+            prompt=prompt, temperature=0)
+    print(f'Generated summary: {response.result}')
+    return response.result
+
 @app.post('/chat')
 def chat():
     try:
         print('Chat request received')
         messages = request.get_json()['messages']
         last_message = messages[-1]['content']
-        print('Message: {last_message}')
+        print(f'Message from user: {last_message}')
         embedding = palm.generate_embeddings(text=last_message,
                 model=embedding_model)['embedding']
         data = closest(embedding)
         print('Semantic search done')
-        context = ['Use the following Pigweed documentation in your answer:']
-        context += [item['text'] for item in data]
-        context = ' '.join(context)
+        information = [item['text'] for item in data]
+        information = ' '.join(information)
+        information = normalize_text(information)
+        information = generate_summary(information)
         paths = [item['path'] for item in data]
+        context = [
+            'Use the following Pigweed information in your answer:',
+            information
+        ]
+        context = ' '.join(context)
         response = palm.chat(messages=messages, context=context, temperature=0)
-        print('PaLM response received')
+        print('Response from PaLM:')
+        print(response)
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
         print('HTML generated')
         return {

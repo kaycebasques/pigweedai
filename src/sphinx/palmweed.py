@@ -30,6 +30,10 @@ def init(app):
 
 def prepare_for_embeddings(app, doctree, docname):
     clone = deepcopy(doctree)
+    # Remove code blocks because PaLM does not like them.
+    for node in clone.traverse(nodes.literal_block):
+        if 'code' in node['classes']:
+            node.parent.remove(node)
     for section in clone.traverse(nodes.section):
         text = section.astext()
         checksum = md5(text.encode('utf-8')).hexdigest()

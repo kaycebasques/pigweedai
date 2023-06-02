@@ -49,6 +49,7 @@ Ask PaLM
            margin-left: 25%;
            padding: var(--palmweed-spacing);
            border-radius: var(--palmweed-border-radius);
+           overflow-x: scroll;
        }
        .palmweed-output-palm {
            background-color: white;
@@ -57,13 +58,14 @@ Ask PaLM
            padding: var(--palmweed-spacing);
            border: var(--palmweed-border-width) solid #b529aa;
            border-radius: var(--palmweed-border-radius);
+           overflow-x: scroll;
        }
    </style>
-   <div id="palmweed-output"></div>
    <div id="palmweed-input-container">
        <textarea id="palmweed-input-textbox" rows="3" placeholder="Ask PaLM something..."></textarea>
        <button id="palmweed-input-send">Send</button>
    </div>
+   <div id="palmweed-output"></div>
    <script>
        window.palmweed = {
            output: document.querySelector('#palmweed-output'),
@@ -122,6 +124,9 @@ Ask PaLM
            const response = await fetch(url, options);
            const json = await response.json();
            if ('error' in json) {
+               // The convo history needs to strictly alternate between PaLM and the
+               // user. There can't be 2+ messages from the user in a row.
+               window.palmweed.messages.pop();
                window.palmweed.send.disabled = false;
                console.log(json.error);
                const errorMessage = '(This is an error message from the Palmweed code. ' +
