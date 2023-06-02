@@ -124,8 +124,8 @@ Ask PaLM
            if ('error' in json) {
                window.palmweed.send.disabled = false;
                console.log(json.error);
-               const errorMessage = '(This is an error message from Palmweed prototype. ' +
-                       'This is not a message from PaLM. ' +
+               const errorMessage = '(This is an error message from the Palmweed code. ' +
+                       'This is NOT a message from PaLM, the LLM. ' +
                        'Some kind of error happened in the Palmweed code. ' +
                        'Sorry about that. Please try again.)';
                window.palmweed.renderMessage(errorMessage, false)
