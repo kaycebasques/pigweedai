@@ -50,6 +50,19 @@ Ask PaLM
            };
            const response = await fetch('https://server-ic22qaceya-uc.a.run.app/chat', options);
            const json = await response.json();
-           console.log(json);
+           if ('error' in json) {
+               alert('TODO: Update this error message.');
+               return;
+           }
+           const palmResponse = json.response;
+           let responseLabel = document.createElement('p');
+           responseLabel.textContent = 'PaLM replied:';
+           responseLabel.classList.add('palmweed-output-label');
+           output.append(responseLabel);
+           let responseContainer = document.createElement('div');
+           responseContainer.textContent = palmResponse;
+           output.append(responseContainer);
+           // TODO save convo history
+           // response history context
        });
    </script>

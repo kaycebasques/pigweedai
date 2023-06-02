@@ -1,4 +1,4 @@
-from firebase_functions import https_fn
+from firebase_functions import https_fn, options
 from firebase_admin import initialize_app, firestore as firestore_init, credentials
 from json import load
 from flask import Flask, request, jsonify
@@ -86,11 +86,19 @@ def chat():
         message = request.get_json()['message']
         embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
+        # TODO: We also need the doc titles if possible.
         data = closest(embedding)
         context = ' '.join([item['text'] for item in data])
+        paths = [item['path'] for item in data]
         # TODO: Include the history and data and so on.
         response = palm.chat(messages=message, context=context)
-        return {'message': response.last}
+        history = response['messages']
+        return {
+            'response': response.last,
+            'context': context,
+            'history': history,
+            'paths': paths
+        }
     except Exception as e:
         return {'error': str(e)}
 
@@ -104,7 +112,8 @@ def query():
         'vanilla': 'N/A'
     }
 
-@https_fn.on_request(timeout_sec=120, memory='512MB')
+# https://firebase.google.com/docs/reference/functions/2nd-gen/python/firebase_functions.options#memoryoption
+@https_fn.on_request(timeout_sec=120, memory=options.MemoryOption.MB_512)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()

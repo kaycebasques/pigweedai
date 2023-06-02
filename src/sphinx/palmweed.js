@@ -13,16 +13,16 @@
 // the License.
 
 
-const options = {
-  method: 'POST',
-  mode: 'cors',
-  headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
-  body: JSON.stringify({'query': 'Explain the Pigweed software project.'})
-};
-
-fetch('https://server-ic22qaceya-uc.a.run.app/api/query', options)
-    .then(response => response.json())
-    .then(json => console.log(json));
+// const options = {
+//   method: 'POST',
+//   mode: 'cors',
+//   headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+//   body: JSON.stringify({'query': 'Explain the Pigweed software project.'})
+// };
+// 
+// fetch('https://server-ic22qaceya-uc.a.run.app/api/query', options)
+//     .then(response => response.json())
+//     .then(json => console.log(json));
 
 
 
