@@ -98,14 +98,19 @@ def chat():
         last_message = messages[-1]['content']
         embedding = palm.generate_embeddings(text=last_message,
                 model=embedding_model)['embedding']
+        print('embedding generation ok')
         # TODO: We also need the doc titles if possible.
         data = closest(embedding)
+        print('semantic search ok')
         context = ['Use the following Pigweed documentation in your answer:']
         context += [item['text'] for item in data]
         context = ' '.join(context)
+        print('context munging ok')
         paths = [item['path'] for item in data]
         response = palm.chat(messages=messages, context=context, temperature=0)
+        print('chat ok')
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
+        print('markdown ok')
         return {
             'response': html,
             'messages': response.messages,
