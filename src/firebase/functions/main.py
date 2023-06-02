@@ -86,9 +86,13 @@ def chat():
         message = request.get_json()['message']
         embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
-        return {'data': closest(embedding)}
+        data = closest(embedding)
+        context = ' '.join([item['text'] for item in data])
+        # TODO: Include the history and data and so on.
+        response = palm.chat(messages=message, context=context)
+        return {'message': response.last}
     except Exception as e:
-        return {'error': print_exc()}
+        return {'error': str(e)}
 
 @app.post('/api/query')
 def query():
