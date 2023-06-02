@@ -24,7 +24,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{steps.deployment.outputs.page_url}}
-    needs: build
+    needs: bootstrap
     runs-on: ubuntu-latest
     name: deploy
     steps:
