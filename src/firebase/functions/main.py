@@ -68,7 +68,7 @@ def closest(target):
     tokens = 0
     # Keep this below the model's maximum limit so that there is space for the user's
     # query and for the prompt instructions.
-    limit = 1000
+    limit = 2000
     matches = []
     for item in calculations:
         if tokens > limit:
@@ -84,14 +84,22 @@ def closest(target):
 def chat():
     try:
         message = request.get_json()['message']
-        embedding = palm.generate_embeddings(text=message,
+        history = request.get_json()['history']
+        new_message = history.append({'author': '0', 'content': message})
+        embedding = palm.generate_embeddings(text=new_message,
                 model=embedding_model)['embedding']
         # TODO: We also need the doc titles if possible.
         data = closest(embedding)
-        context = ' '.join([item['text'] for item in data])
+        instructions = [
+            'You are a friendly expert in the Pigweed software project.',
+            'You must base your answer off the following Pigweed documentation.',
+            'If you are unsure of the accuracy of your answer, you should decline to answer.'
+        ]
+        instructions += [item['text'] for item in data]
+        context = ' '.join(instructions)
         paths = [item['path'] for item in data]
         # TODO: Include the history and data and so on.
-        response = palm.chat(messages=message, context=context)
+        response = palm.chat(messages=message, context=context, temperature=0)
         history = response.messages
         return {
             'response': response.last,
