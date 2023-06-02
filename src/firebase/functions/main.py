@@ -1,5 +1,6 @@
 from firebase_functions import https_fn, options
 from firebase_admin import initialize_app, firestore as firestore_init, credentials
+from firebase_admin.exceptions import FirebaseError
 from json import load
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -84,9 +85,11 @@ def closest(target):
 def chat():
     try:
         message = request.get_json()['message']
+        print(f'message: {message}')
         history = request.get_json()['history']
+        print(f'history: {history}')
         new_message = history.append({'author': '0', 'content': message})
-        embedding = palm.generate_embeddings(text=new_message,
+        embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
         # TODO: We also need the doc titles if possible.
         data = closest(embedding)
@@ -99,6 +102,7 @@ def chat():
         context = ' '.join(instructions)
         paths = [item['path'] for item in data]
         response = palm.chat(messages=new_message, context=context, temperature=0)
+        print(response.last)
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
         history = response.messages
         return {
@@ -107,7 +111,12 @@ def chat():
             'history': history,
             'paths': paths
         }
+    except FirebaseError as e:
+        print(e.code)
+        print(e.message)
+        return {'code': e.code, 'error': e.message}
     except Exception as e:
+        print(e)
         return {'error': str(e)}
 
 @app.post('/api/query')
