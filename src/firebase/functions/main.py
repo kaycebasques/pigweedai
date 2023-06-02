@@ -94,6 +94,7 @@ def markdown_to_html(markdown):
 def chat():
     try:
         messages = request.get_json()['messages']
+        print(messages)
         last_message = messages[-1]['content']
         embedding = palm.generate_embeddings(text=last_message,
                 model=embedding_model)['embedding']
