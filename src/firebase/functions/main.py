@@ -98,8 +98,7 @@ def chat():
         instructions += [item['text'] for item in data]
         context = ' '.join(instructions)
         paths = [item['path'] for item in data]
-        # TODO: Include the history and data and so on.
-        response = palm.chat(messages=message, context=context, temperature=0)
+        response = palm.chat(messages=new_message, context=context, temperature=0)
         html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
         history = response.messages
         return {

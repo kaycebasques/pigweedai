@@ -32,8 +32,10 @@ Ask PaLM
        // TODO: Left-align and right-align messages.
        let output = document.querySelector('#palmweed-output');
        let textbox = document.querySelector('#palmweed-input-textbox');
+       let send = document.querySelector('#palmweed-input-send');
        let history = [];
        document.querySelector('#palmweed-input-send').addEventListener('click', async () => {
+           send.disabled = true;
            const message = textbox.value;
            let label = document.createElement('p');
            label.textContent = 'You said:';
@@ -53,7 +55,8 @@ Ask PaLM
            const response = await fetch('https://server-ic22qaceya-uc.a.run.app/chat', options);
            const json = await response.json();
            if ('error' in json) {
-               alert('TODO: Update this error message.');
+               console.log(json.error);
+               send.disabled = false;
                return;
            }
            const palmResponse = json.response;
@@ -65,6 +68,7 @@ Ask PaLM
            let responseContainer = document.createElement('div');
            responseContainer.innerHTML = palmResponse;
            output.append(responseContainer);
+           send.disabled = false;
            // TODO save convo history
            // response history context
        });
