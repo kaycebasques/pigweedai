@@ -63,7 +63,7 @@ Ask PaLM
            responseLabel.classList.add('palmweed-output-label');
            output.append(responseLabel);
            let responseContainer = document.createElement('div');
-           responseContainer.textContent = palmResponse;
+           responseContainer.innerHTML = palmResponse;
            output.append(responseContainer);
            // TODO save convo history
            // response history context
