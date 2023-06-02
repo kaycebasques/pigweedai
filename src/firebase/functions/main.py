@@ -104,7 +104,7 @@ def query():
         'vanilla': 'N/A'
     }
 
-@https_fn.on_request()
+@https_fn.on_request(timeout_sec=120, memory='512MB')
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()
