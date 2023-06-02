@@ -7,17 +7,30 @@ Ask PaLM
 .. raw:: html
 
    <style>
+       :root {
+           --palmweed-border-radius: 15px;
+           --palmweed-spacing: 1em;
+           --palmweed-border-width: 3px;
+           --palmweed-neutral-color: lightgrey;
+       }
        #palmweed-input-container {
            width: 100%;
            max-width: 100%;
            display: flex;
            align-items: center;
-           margin-top: 1em;
+           margin-top: var(--palmweed-spacing);
        }
        #palmweed-input-textbox {
            width: 75%;
            max-width: 75%;
-           margin-right: 1em;
+           margin-right: var(--palmweed-spacing);
+           padding: var(--palmweed-spacing);
+           border: var(--palmweed-border-width) solid var(--palmweed-neutral-color);
+           border-radius: var(--palmweed-border-radius);
+       }
+       #palmweed-input-send {
+           padding: calc(var(--palmweed-spacing) / 2);
+           border-radius: var(--palmweed-border-radius);
        }
        .palmweed-output-label-user {
            font-style: italic;
@@ -31,19 +44,19 @@ Ask PaLM
        }
        .palmweed-output-user {
            background-color: #dcf8c6;
-           text-color: black;
+           color: black;
            max-width: 75%;
            margin-left: 25%;
-           padding: 1em;
-           border-radius: 25px;
+           padding: var(--palmweed-spacing);
+           border-radius: var(--palmweed-border-radius);
        }
        .palmweed-output-palm {
            background-color: white;
-           text-color: black;
-           border: 5px solid #b529aa;
+           color: black;
            max-width: 75%;
-           padding: 1em;
-           border-radius: 25px;
+           padding: var(--palmweed-spacing);
+           border: var(--palmweed-border-width) solid #b529aa;
+           border-radius: var(--palmweed-border-radius);
        }
    </style>
    <div id="palmweed-output"></div>
