@@ -29,6 +29,7 @@ Ask PaLM
        <button id="palmweed-input-send">Send</button>
    </div>
    <script>
+       // TODO: Left-align and right-align messages.
        let output = document.querySelector('#palmweed-output');
        let textbox = document.querySelector('#palmweed-input-textbox');
        document.querySelector('#palmweed-input-send').addEventListener('click', async () => {
