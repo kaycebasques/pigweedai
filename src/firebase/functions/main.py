@@ -81,14 +81,28 @@ def closest(target):
     # TODO: Return all matches, not just the first one.
     return matches
 
+def get_docs_context(message):
+    # TODO: Return the context string AND paths.
+    pass
+
+def markdown_to_html(markdown):
+    pass
+
 @app.post('/chat')
 def chat():
     try:
         message = request.get_json()['message']
         print(f'message: {message}')
-        history = request.get_json()['history']
-        print(f'history: {history}')
-        new_message = history.append({'author': '0', 'content': message})
+        # TODO
+        # history = request.get_json()['history']
+        # print(f'history: {history}')
+        # new_message = history.append({'author': '0', 'content': message})
+        new_message = [
+            {
+                'author': '0',
+                'content': message
+            }
+        ]
         embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
         # TODO: We also need the doc titles if possible.
