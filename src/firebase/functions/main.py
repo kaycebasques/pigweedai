@@ -93,13 +93,6 @@ def markdown_to_html(markdown):
 def normalize_text(text):
     return text.replace('\n', ' ')
 
-def generate_summary(context):
-    print('Summary generation request received')
-    instructions = [
-        'The user is trying to develop embedded systems with the Pigweed software project.',
-        'Generate a summary of the following Pigweed documentation: ',
-        context
-    ]
     prompt = ' '.join(instructions)
     response = palm.generate_text(model='models/text-bison-001',
             prompt=prompt, temperature=0)
@@ -110,31 +103,32 @@ def generate_summary(context):
 def chat():
     try:
         print('Chat request received')
-        messages = request.get_json()['messages']
-        last_message = messages[-1]['content']
-        print(f'Message from user: {last_message}')
-        embedding = palm.generate_embeddings(text=last_message,
+        message = request.get_json()['message']
+        print(f'Message from user: {message}')
+        embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
         data = closest(embedding)
         print('Semantic search done')
         information = [item['text'] for item in data]
         information = ' '.join(information)
         information = normalize_text(information)
-        information = generate_summary(information)
         paths = [item['path'] for item in data]
-        context = [
-            'Use the following Pigweed information in your answer:',
+        prompt = [
+            message,
+            'Answer in the context of the Pigweed software project.',
+            'Use the following information:',
             information
         ]
-        context = ' '.join(context)
-        response = palm.chat(messages=messages, context=context, temperature=0)
+        prompt = ' '.join(prompt)
+        response = palm.generate_text(model='models/text-bison-001',
+                prompt=prompt, temperature=0)
         print('Response from PaLM:')
         print(response)
-        html = markdown(response.last, extensions=['markdown.extensions.fenced_code'])
+        html = markdown(response.result,
+                extensions=['markdown.extensions.fenced_code'])
         print('HTML generated')
         return {
-            'response': html,
-            'messages': response.messages,
+            'reply': html,
             'paths': paths
         }
     except Exception as e:
