@@ -19,6 +19,7 @@ from copy import deepcopy
 from os.path import exists, join
 from os import makedirs, remove
 from glob import glob
+from requests import post
 
 def get_data_dir(app):
     return f'{app.outdir}/embeddings'
@@ -28,24 +29,49 @@ def init(app):
     if not exists(data_dir):
         makedirs(data_dir)
 
-def prepare_for_embeddings(app, doctree, docname):
+def prepare_database(app, doctree, docname):
     clone = deepcopy(doctree)
-    # Remove code blocks because PaLM does not like them.
-    for node in clone.traverse(nodes.literal_block):
-        if 'code' in node['classes']:
-            node.parent.remove(node)
-    for section in clone.traverse(nodes.section):
-        text = section.astext()
-        checksum = md5(text.encode('utf-8')).hexdigest()
-        data = {
-            'text': text,
-            'checksum': checksum,
-            'path': app.builder.get_target_uri(docname),
-        }
-        name = f'{checksum}.json'
-        path = f'{get_data_dir(app)}/{name}'
-        with open(path, 'w') as f:
-            dump(data, f, indent=4)
+    text = clone.astext()
+    # Only covering RPC docs for now.
+    if 'pw_rpc' not in text:
+        return
+    checksum = md5(text.encode('utf-8')).hexdigest()
+    url = 'https://server-ic22qaceya-uc.a.run.app/count_tokens'
+    body = {
+        'text': text
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    response = post(url, data=body, headers=headers)
+    token_count = response.json()['token_count']
+    data = {
+        # 'text': text,
+        'checksum': checksum,
+        'path': app.builder.get_target_uri(docname),
+    }
+    name = f'{checksum}.json'
+    path = f'{get_data_dir(app)}/{name}'
+    with open(path, 'w') as f:
+        dump(data, f, indent=4)
+
+
+    # # Remove code blocks because PaLM does not like them.
+    # for node in clone.traverse(nodes.literal_block):
+    #     if 'code' in node['classes']:
+    #         node.parent.remove(node)
+    # for section in clone.traverse(nodes.section):
+    #     text = section.astext()
+    #     checksum = md5(text.encode('utf-8')).hexdigest()
+    #     data = {
+    #         'text': text,
+    #         'checksum': checksum,
+    #         'path': app.builder.get_target_uri(docname),
+    #     }
+    #     name = f'{checksum}.json'
+    #     path = f'{get_data_dir(app)}/{name}'
+    #     with open(path, 'w') as f:
+    #         dump(data, f, indent=4)
 
 def merge(app, exception):
     data = {}
@@ -53,20 +79,14 @@ def merge(app, exception):
         with open(file_path, 'r') as f:
             file_data = load(f)
         checksum = file_data['checksum']
-        text = file_data['text']
-        path = file_data['path']
-        data[checksum] = {
-            'text': text,
-            'path': path,
-            'checksum': checksum
-        }
+        data[checksum] = file_data
         remove(file_path)
     with open(f'{get_data_dir(app)}/database.json', 'w') as f:
-        dump(data, f)
+        dump(data, f, indent=4)
 
 def setup(app):
     app.connect('builder-inited', init)
-    app.connect('doctree-resolved', prepare_for_embeddings)
+    app.connect('doctree-resolved', prepare_database)
     app.connect('build-finished', merge)
     return {
         'version': '0.0.0',

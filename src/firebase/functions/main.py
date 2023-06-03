@@ -154,6 +154,19 @@ def chat():
             'error': str(e)
         }
 
+@app.post('/count_tokens')
+def count_tokens():
+    try:
+        body = request.get_json()
+        print(body)
+        text = body['text']
+        response = palm.count_message_tokens(prompt=text)
+        print(response)
+        return {'token_count': response['token_count']}
+    except Exception as e:
+        print(e)
+        return {'token_count': None}
+ 
 @https_fn.on_request(timeout_sec=120, memory=MemoryOption.MB_512)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
