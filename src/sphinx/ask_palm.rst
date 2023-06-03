@@ -12,6 +12,8 @@ Ask PaLM
            --palmweed-spacing: 1em;
            --palmweed-border-width: 3px;
            --palmweed-neutral-color: lightgrey;
+           --palmweed-message-width: 80%;
+           --palmweed-message-margin: 20%;
        }
        #palmweed-input-container {
            width: 100%;
@@ -45,8 +47,8 @@ Ask PaLM
        .palmweed-output-user {
            background-color: #dcf8c6;
            color: black;
-           max-width: 75%;
-           margin-left: 25%;
+           max-width: var(--palmweed-message-width);
+           margin-left: var(--palmweed-message-margin);
            padding: var(--palmweed-spacing);
            border-radius: var(--palmweed-border-radius);
            overflow-x: scroll;
@@ -54,7 +56,7 @@ Ask PaLM
        .palmweed-output-palm {
            background-color: white;
            color: black;
-           max-width: 75%;
+           max-width: var(--palmweed-message-width);
            padding: var(--palmweed-spacing);
            border: var(--palmweed-border-width) solid #b529aa;
            border-radius: var(--palmweed-border-radius);
