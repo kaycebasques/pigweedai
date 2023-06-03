@@ -25,11 +25,6 @@ function build_docs() {
             src/firebase/functions/database.json
 }
 
-function open_palmweed_page() {
-    xdg-open pigweed/out/docs/gen/docs/html/docs/ask_palm.html
-}
-
 reset_docs_repo
 hack_palmweed_into_docs_repo
 build_docs
-open_palmweed_page

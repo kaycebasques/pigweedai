@@ -93,10 +93,11 @@ def markdown_to_html(markdown):
 def normalize_text(text):
     return text.replace('\n', ' ')
 
-    prompt = ' '.join(instructions)
+def generate_summary(prompt):
     response = palm.generate_text(model='models/text-bison-001',
             prompt=prompt, temperature=0)
-    print(f'Generated summary: {response.result}')
+    if response.result is None:
+        return 'PaLM was unable to generate a summary.'
     return response.result
 
 @app.post('/chat')
@@ -105,30 +106,44 @@ def chat():
         print('Chat request received')
         message = request.get_json()['message']
         print(f'Message from user: {message}')
+        history = request.get_json()['history']
         embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
         data = closest(embedding)
-        print('Semantic search done')
-        information = [item['text'] for item in data]
-        information = ' '.join(information)
-        information = normalize_text(information)
         paths = [item['path'] for item in data]
-        prompt = [
-            message,
-            'Answer in the context of the Pigweed software project.',
-            'Use the following information:',
-            information
-        ]
-        prompt = ' '.join(prompt)
-        response = palm.generate_text(model='models/text-bison-001',
-                prompt=prompt, temperature=0)
+        print('Semantic search done')
+        docs = [item['text'] for item in data]
+        docs = ' '.join(docs)
+        docs = normalize_text(docs)
+        summary_prompt = f'Summarize the following documentation. Use complete sentences. {docs}'
+        history.append({
+            'author': 'user',
+            'content': summary_prompt
+        })
+        history.append({
+            'author': 'palm',
+            'content': generate_summary(summary_prompt)
+        })
+        history.append({
+            'author': 'user',
+            'content': f'Use the summary from your last reply to respond to this prompt: {message}'
+        })
+        response = palm.chat(messages=history, temperature=0)
         print('Response from PaLM:')
         print(response)
-        html = markdown(response.result,
+        reply = response.last
+        if reply is None:
+            reply = 'PaLM was unable to answer that.'
+        history.append({
+            'author': 'palm',
+            'content': reply
+        })
+        html = markdown(reply,
                 extensions=['markdown.extensions.fenced_code'])
         print('HTML generated')
         return {
             'reply': html,
+            'history': history,
             'paths': paths
         }
     except Exception as e:

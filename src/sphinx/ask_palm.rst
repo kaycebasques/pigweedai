@@ -70,7 +70,19 @@ Ask PaLM
        window.palmweed = {
            output: document.querySelector('#palmweed-output'),
            textbox: document.querySelector('#palmweed-input-textbox'),
-           send: document.querySelector('#palmweed-input-send')
+           send: document.querySelector('#palmweed-input-send'),
+           history: [
+               {
+                   'author': 'user',
+                   'content': 'You are a friendly expert in the Pigweed software project. ' +
+                              'You are helping me build embedded systems with Pigweed.'
+               },
+               {
+                   'author': 'palm',
+                   'content': 'OK. How can I help you?'
+               }
+
+           ]
        };
        window.palmweed.renderMessage = (message, isUser) => {
            let label = document.createElement('p');
@@ -99,7 +111,7 @@ Ask PaLM
                headers: {
                    'Content-Type': 'application/json',
                },
-               body: JSON.stringify({message})
+               body: JSON.stringify({message, 'history': window.palmweed.history})
            };
            const url = (new URLSearchParams(window.location.search)).get('debug') === '1' ?
                    'http://127.0.0.1:5001/palmweed-prototype/us-central1/server/chat' :
@@ -119,6 +131,8 @@ Ask PaLM
            }
            const reply = json.reply;
            window.palmweed.renderMessage(reply, false);
+           window.palmweed.history = json.history;
+           console.log(window.palmweed.history);
            window.palmweed.textbox.placeholder = 'Ask PaLM something...';
            window.palmweed.send.disabled = false;
            window.palmweed.textbox.focus();
