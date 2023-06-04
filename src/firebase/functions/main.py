@@ -70,7 +70,7 @@ def closest(target):
     tokens = 0
     # Keep this below the model's maximum limit so that there is space for the user's
     # query and for the prompt instructions.
-    limit = 2000
+    limit = 4000
     matches = []
     for item in calculations:
         if tokens > limit:
@@ -82,66 +82,57 @@ def closest(target):
     # TODO: Return all matches, not just the first one.
     return matches
 
+@app.get('/debug')
+def debug():
+    response = palm.chat(messages='Hello!')
+    return response.last
+
 def get_context_and_paths(message):
     embedding = palm.generate_embeddings(text=message,
             model=embedding_model)['embedding']
     data = closest(embedding)
     paths = [item['path'] for item in data]
-    docs = [item['text'] for item in data]
-    docs = ' '.join(docs)
-    instructions = [
+    documentation = '<documentation>'
+    for item in data:
+        text = item['text']
+        path = item['path']
+        documentation += f'<document><excerpt>{text}</excerpt><path>{path}</path></document>'
+    documentation += '</documentation>'
+    context = [
         'You are a friendly expert in developing embedded systems with Pigweed modules and tools.',
-        'You are going to answer a question from a Pigweed user.',
-        "Here is the user's question:",
-        message,
-        "This is the end of the user's question.",
-        "Reference this documentation to help answer the user's question:",
-        docs
+        'Answer this question from a Pigweed user:',
+        f'<question>{message}</question>',
+        "Summarize this documentation and use your summary in your answer:",
+        documentation
     ]
-    context = ' '.join(instructions)
+    context = ' '.join(context)
     context = context.replace('\n', ' ')
     return {'context': context, 'paths': paths}
+
+def update_chat_logs(uuid, author, message, context=None):
+    # author message timestamp for user messages
+    # author message timestamp context paths for palm
+    pass
 
 @app.post('/chat')
 def chat():
     try:
         request_data = request.get_json()
         message = request_data['message']
-        history = request_data['history']
-        history.append({
-            'author': 'user',
-            'message': message,
-            'timestamp': get_timestamp()
-        })
         uuid = request_data['uuid']
         data = get_context_and_paths(message)
         context = data['context']
         paths = data['paths']
         response = palm.generate_text(prompt=context, temperature=0)
-        result = response.result
-        history.append({
-            'author': 'palm',
-            'context': context,
-            'message': result,
-            'paths': paths,
-            'timestamp': get_timestamp()
-        })
-        if result is None:
-            return {
-                'error': 'Empty response from PaLM.',
-                'history': history
-            }
-        html = markdown(result,
-                extensions=['markdown.extensions.fenced_code'])
+        reply = response.result
+        html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
         return {
             'reply': html,
-            'history': history,
-            # 'paths': paths
+            'paths': paths
         }
     except Exception as e:
-        data = handle_exception(e)
-        data['history'] = history
-        return data
+        print(locals()) # TODO: Always pass locals to exception handler?
+        return handle_exception(e)
 
 def embed(text):
     response = palm.generate_embeddings(text=text, model=embedding_model)

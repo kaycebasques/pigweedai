@@ -82,8 +82,7 @@ Ask PaLM
            uuid: crypto.randomUUID(),
            output: document.querySelector('#palmweed-output'),
            textbox: document.querySelector('#palmweed-textbox'),
-           send: document.querySelector('#palmweed-send'),
-           history: []
+           send: document.querySelector('#palmweed-send')
        };
        window.palmweed.renderMessage = (message, role) => {
            let label = document.createElement('p');
@@ -110,10 +109,9 @@ Ask PaLM
            container.innerHTML = message;
            window.palmweed.output.append(container);
        };
-       window.palmweed.chat = async (message) => {
+       window.palmweed.chat = (message) => {
            const body = {
                'message': message,
-               'history': window.palmweed.history,
                'uuid': window.palmweed.uuid
            };
            const options = {
@@ -128,35 +126,43 @@ Ask PaLM
            const url = debug ?
                    'http://127.0.0.1:5001/palmweed-prototype/us-central1/server/chat' :
                    'https://server-ic22qaceya-uc.a.run.app/chat';
-           const response = await fetch(url, options);
-           const json = await response.json();
-           return json;
+           fetch(url, options).then(response => {
+               if (response.ok) {
+                   return response.json();
+               }
+               throw new Error('Something went wrong...');
+           }).then(json => {
+               if (!('reply' in json)) {
+                   window.palmweed.send.disabled = false;
+                   const errorMessage = '(This is a message from the Palmweed code. ' +
+                           'This is NOT a message from PaLM. ' +
+                           'Some kind of error happened. Sorry about that. ' +
+                           'Please try a different question.)';
+                   window.palmweed.renderMessage(errorMessage, 'palmweed')
+                   window.palmweed.textbox.focus();
+                   return;
+               }
+               const reply = json.reply;
+               window.palmweed.renderMessage(reply, 'palm');
+               window.palmweed.textbox.placeholder = 'Ask PaLM something...';
+               window.palmweed.send.disabled = false;
+               window.palmweed.textbox.focus();
+           }).catch(error => {
+               window.palmweed.send.disabled = false;
+               const errorMessage = '(This is a message from the Palmweed code. ' +
+                       'This is NOT a message from PaLM. ' +
+                       'Some kind of error happened. Sorry about that. ' +
+                       'Please try a different prompt.)';
+               window.palmweed.renderMessage(errorMessage, 'palmweed')
+               window.palmweed.textbox.focus();
+           });
        };
-       window.palmweed.send.addEventListener('click', async () => {
+       window.palmweed.send.addEventListener('click', () => {
            window.palmweed.send.disabled = true;
            const message = window.palmweed.textbox.value;
            window.palmweed.textbox.value = '';
            window.palmweed.textbox.placeholder = 'Getting a response from PaLM. Please wait...';
            window.palmweed.renderMessage(message, 'user');
-           const json = await window.palmweed.chat(message);
-           if ('error' in json) {
-               window.palmweed.send.disabled = false;
-               console.log(json.error);
-               const errorMessage = '(This is an error message from the Palmweed code. ' +
-                       'This is NOT a message from PaLM, the LLM. ' +
-                       'Some kind of error happened in our prototype code. ' +
-                       'Sorry about that. Please try again.)';
-               window.palmweed.history = json['history'];
-               window.palmweed.renderMessage(errorMessage, 'palmweed')
-               window.palmweed.textbox.focus();
-               return;
-           }
-           const reply = json.reply;
-           window.palmweed.renderMessage(reply, 'palm');
-           window.palmweed.history = json.history;
-           console.log(window.palmweed.history.context);
-           window.palmweed.textbox.placeholder = 'Ask PaLM something...';
-           window.palmweed.send.disabled = false;
-           window.palmweed.textbox.focus();
+           window.palmweed.chat(message);
        });
    </script>
