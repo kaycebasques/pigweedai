@@ -146,6 +146,7 @@ Ask PaLM
                        'This is NOT a message from PaLM, the LLM. ' +
                        'Some kind of error happened in our prototype code. ' +
                        'Sorry about that. Please try again.)';
+               window.palmweed.history = json['history'];
                window.palmweed.renderMessage(errorMessage, 'palmweed')
                window.palmweed.textbox.focus();
                return;
@@ -153,7 +154,7 @@ Ask PaLM
            const reply = json.reply;
            window.palmweed.renderMessage(reply, 'palm');
            window.palmweed.history = json.history;
-           console.log(window.palmweed.history);
+           console.log(window.palmweed.history.context);
            window.palmweed.textbox.placeholder = 'Ask PaLM something...';
            window.palmweed.send.disabled = false;
            window.palmweed.textbox.focus();

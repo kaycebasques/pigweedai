@@ -82,38 +82,66 @@ def closest(target):
     # TODO: Return all matches, not just the first one.
     return matches
 
+def get_context_and_paths(message):
+    embedding = palm.generate_embeddings(text=message,
+            model=embedding_model)['embedding']
+    data = closest(embedding)
+    paths = [item['path'] for item in data]
+    docs = [item['text'] for item in data]
+    docs = ' '.join(docs)
+    instructions = [
+        'You are a friendly expert in developing embedded systems with Pigweed modules and tools.',
+        'You are going to answer a question from a Pigweed user.',
+        "Here is the user's question:",
+        message,
+        "This is the end of the user's question.",
+        "Reference this documentation to help answer the user's question:",
+        docs
+    ]
+    context = ' '.join(instructions)
+    context = context.replace('\n', ' ')
+    return {'context': context, 'paths': paths}
+
 @app.post('/chat')
 def chat():
     try:
         request_data = request.get_json()
         message = request_data['message']
         history = request_data['history']
+        history.append({
+            'author': 'user',
+            'message': message,
+            'timestamp': get_timestamp()
+        })
         uuid = request_data['uuid']
-        embedding = palm.generate_embeddings(text=message,
-                model=embedding_model)['embedding']
-        # data = closest(embedding)
-        # paths = [item['path'] for item in data]
-        # docs = [item['text'] for item in data]
-        # docs = ' '.join(docs)
-        # docs = normalize_text(docs)
-        response = palm.generate_text(prompt=message, temperature=0)
-        print(response)
+        data = get_context_and_paths(message)
+        context = data['context']
+        paths = data['paths']
+        response = palm.generate_text(prompt=context, temperature=0)
         result = response.result
-        # if result is None:
-        #     result = 'PaLM was unable to answer that.'
-        # history.append({
-        #     'author': 'palm',
-        #     'content': reply
-        # })
-        # html = markdown(reply,
-        #         extensions=['markdown.extensions.fenced_code'])
+        history.append({
+            'author': 'palm',
+            'context': context,
+            'message': result,
+            'paths': paths,
+            'timestamp': get_timestamp()
+        })
+        if result is None:
+            return {
+                'error': 'Empty response from PaLM.',
+                'history': history
+            }
+        html = markdown(result,
+                extensions=['markdown.extensions.fenced_code'])
         return {
-            'reply': result,
+            'reply': html,
             'history': history,
             # 'paths': paths
         }
     except Exception as e:
-        return handle_exception(e)
+        data = handle_exception(e)
+        data['history'] = history
+        return data
 
 def embed(text):
     response = palm.generate_embeddings(text=text, model=embedding_model)
