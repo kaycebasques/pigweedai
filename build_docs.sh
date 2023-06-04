@@ -21,8 +21,8 @@ function build_docs() {
     ninja -C out docs
     deactivate
     cd ..
-    mv pigweed/out/docs/gen/docs/html/embeddings/database.json \
-            src/firebase/functions/database.json
+    # mv pigweed/out/docs/gen/docs/html/embeddings/database.json \
+    #         src/firebase/functions/database.json
 }
 
 reset_docs_repo

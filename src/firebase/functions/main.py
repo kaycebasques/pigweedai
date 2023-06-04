@@ -11,26 +11,16 @@ from time import sleep
 import numpy as np
 from traceback import print_exc
 from markdown import markdown
+from hashlib import md5
 
-# Load PaLM API key. env.json is not checked into the repo. It needs
-# to be in the same directory as this main.py file when the Firebase
-# Functions are deployed.
 with open('env.json', 'r') as f:
     env = load(f)
-# At this point the database only has: the full text of each section,
-# the URL of the doc that each section is a part of, and the checksum
-# for each section.
 with open('database.json', 'r') as f:
     database = load(f)
-
 # palm.list_models() shows that this is the limit for models/embedding-gecko-001.
 token_limit = 1024
 embedding_model = 'models/embedding-gecko-001'
 chat_model = 'models/text-bison-001'
-
-# service_account.json has the Firebase service account credentials.
-# It is not checked into this repo and needs to be in the same directory
-# as this main.py file when the Firebase Functions are deployed.
 service_account_credentials = credentials.Certificate('service_account.json')
 initialize_app(service_account_credentials)
 firestore = firestore_init.client()
@@ -147,25 +137,60 @@ def chat():
             'paths': paths
         }
     except Exception as e:
-        print(f'Exception: {e}')
-        print('Exception stack trace:')
-        print_exc()
-        return {
-            'error': str(e)
+        return handle_exception(e)
+
+def embed(text):
+    response = palm.generate_embeddings(text=text, model=embedding_model)
+    embedding = response['embedding']
+    return response['embedding']
+
+def handle_exception(exception):
+    print(f'Exception: {exception}')
+    print('Exception stack trace:')
+    print_exc()
+    return {'error': exception}
+
+@app.post('/generate_embedding')
+def generate_embedding():
+    try:
+        print('/generate_embedding')
+        request_data = request.get_json()
+        text = request_data['text']
+        token_count = request_data['token_count']
+        path = request_data['path']
+        checksum = md5(text.encode('utf-8')).hexdigest()
+        print(checksum)
+        print(path)
+        firebase_ref = embeddings.document(checksum)
+        firebase_doc = firebase_ref.get()
+        if firebase_doc.exists and 'embedding' in firebase_doc.to_dict():
+            return {'embedding': firebase_doc.to_dict()['embedding']}
+        new_data = {
+            'text': text,
+            'token_count': token_count,
+            'path': path
         }
+        # Save early because the the embedding API often fails.
+        # Other parts of the server codebase try to complete the embedding
+        # process later.
+        firebase_ref.set(new_data)
+        embedding = embed(text)
+        new_data['embedding'] = embedding
+        firebase_ref.set(new_data)
+        return {'embedding': embedding}
+    except Exception as e:
+        return handle_exception(e)
 
 @app.post('/count_tokens')
 def count_tokens():
     try:
+        print('/count_tokens')
         body = request.get_json()
-        print(body)
         text = body['text']
         response = palm.count_message_tokens(prompt=text)
-        print(response)
         return {'token_count': response['token_count']}
     except Exception as e:
-        print(e)
-        return {'token_count': None}
+        return handle_exception(e)
  
 @https_fn.on_request(timeout_sec=120, memory=MemoryOption.MB_512)
 def server(req: https_fn.Request) -> https_fn.Response:

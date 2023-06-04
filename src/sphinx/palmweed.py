@@ -14,80 +14,81 @@
 
 from docutils import nodes
 from hashlib import md5
-from json import dump, load
+from json import dump, load, dumps
 from copy import deepcopy
 from os.path import exists, join
 from os import makedirs, remove
 from glob import glob
 from requests import post
+from math import floor, ceil
 
-def get_data_dir(app):
-    return f'{app.outdir}/embeddings'
+embedding_model_token_limit = 1000
+server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
 
-def init(app):
-    data_dir = get_data_dir(app)
-    if not exists(data_dir):
-        makedirs(data_dir)
+def split_doc_into_embeddable_chunks(doc, doc_size_in_tokens):
+    num_of_chunks = ceil(doc_size_in_tokens / embedding_model_token_limit)
+    chunk_size_in_tokens = ceil(doc_size_in_tokens / num_of_chunks)
+    len_of_doc_in_chars = len(doc)
+    chunk_size_in_chars = floor(len_of_doc_in_chars / num_of_chunks)
+    chunk_start_index = 0
+    chunk_end_index = chunk_size_in_chars
+    chunks = []
+    while chunk_end_index < len_of_doc_in_chars:
+        chunk = doc[chunk_start_index:chunk_end_index]
+        token_count = get_token_count(chunk)
+        chunks.append({
+            'text': chunk,
+            'token_count': token_count
+        })
+        chunk_start_index += chunk_size_in_chars
+        chunk_end_index += chunk_size_in_chars
+        # Termination case.
+        if chunk_end_index > len_of_doc_in_chars:
+            chunk = doc[chunk_start_index:chunk_end_index]
+            token_count = get_token_count(chunk)
+            chunks.append({
+                'text': chunk,
+                'token_count': token_count
+            })
+    return chunks
 
-def prepare_database(app, doctree, docname):
+def get_token_count(text):
+    try:
+        url = f'{server}/count_tokens'
+        data = {'text': text}
+        headers = {'Content-Type': 'application/json'}
+        response = post(url, data=dumps(data), headers=headers)
+        return response.json()['token_count']
+    except Exception as e:
+        return None
+
+def generate_embeddings(app, doctree, docname):
     clone = deepcopy(doctree)
-    text = clone.astext()
+    doc_text = clone.astext()
     # Only covering RPC docs for now.
-    if 'pw_rpc' not in text:
+    if 'pw_rpc' not in doc_text:
         return
-    checksum = md5(text.encode('utf-8')).hexdigest()
-    url = 'https://server-ic22qaceya-uc.a.run.app/count_tokens'
-    body = {
-        'text': text
-    }
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    response = post(url, data=body, headers=headers)
-    token_count = response.json()['token_count']
-    data = {
-        # 'text': text,
-        'checksum': checksum,
-        'path': app.builder.get_target_uri(docname),
-    }
-    name = f'{checksum}.json'
-    path = f'{get_data_dir(app)}/{name}'
-    with open(path, 'w') as f:
-        dump(data, f, indent=4)
-
-
-    # # Remove code blocks because PaLM does not like them.
-    # for node in clone.traverse(nodes.literal_block):
-    #     if 'code' in node['classes']:
-    #         node.parent.remove(node)
-    # for section in clone.traverse(nodes.section):
-    #     text = section.astext()
-    #     checksum = md5(text.encode('utf-8')).hexdigest()
-    #     data = {
-    #         'text': text,
-    #         'checksum': checksum,
-    #         'path': app.builder.get_target_uri(docname),
-    #     }
-    #     name = f'{checksum}.json'
-    #     path = f'{get_data_dir(app)}/{name}'
-    #     with open(path, 'w') as f:
-    #         dump(data, f, indent=4)
-
-def merge(app, exception):
-    data = {}
-    for file_path in glob(f'{get_data_dir(app)}/*.json'):
-        with open(file_path, 'r') as f:
-            file_data = load(f)
-        checksum = file_data['checksum']
-        data[checksum] = file_data
-        remove(file_path)
-    with open(f'{get_data_dir(app)}/database.json', 'w') as f:
-        dump(data, f, indent=4)
+    doc_token_count = get_token_count(doc_text)
+    if doc_token_count is None:
+        return
+    chunks = split_doc_into_embeddable_chunks(doc_text, doc_token_count)
+    url = f'{server}/generate_embedding'
+    for chunk in chunks:
+        headers = {'Content-Type': 'application/json'}
+        data = {
+            'text': chunk['text'],
+            'path': app.builder.get_target_uri(docname),
+            'token_count': chunk['token_count']
+        }
+        # This is a blocking call. We don't care about the response so maybe
+        # we should use a non-blocking alternative in the future. It would have
+        # to be another library because requests only offers the blocking API.
+        # For now, it's probably good to slow down these requests because the
+        # embedding API has a rate limit of 300 requests per minute.
+        post(url, data=dumps(data), headers=headers)
 
 def setup(app):
-    app.connect('builder-inited', init)
-    app.connect('doctree-resolved', prepare_database)
-    app.connect('build-finished', merge)
+    app.connect('doctree-resolved', generate_embeddings)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,
