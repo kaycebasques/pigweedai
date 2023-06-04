@@ -84,6 +84,7 @@ Ask PaLM
            textbox: document.querySelector('#palmweed-textbox'),
            send: document.querySelector('#palmweed-send')
        };
+       // TODO: renderSources and renderFeedbackWidgets
        window.palmweed.renderMessage = (message, role) => {
            let label = document.createElement('p');
            let container = document.createElement('div');
@@ -109,10 +110,8 @@ Ask PaLM
            container.innerHTML = message;
            window.palmweed.output.append(container);
        };
-       window.palmweed.renderSources = (sources, container) => {
-           // TODO this should be handled within renderMessage 
-
-       };
+       // TOOD: Should be implemented within renderMessage().
+       // window.palmweed.renderSources = (sources, container) => {};
        window.palmweed.chat = (message) => {
            const body = {
                'message': message,
@@ -148,9 +147,9 @@ Ask PaLM
                }
                const reply = json.reply;
                window.palmweed.renderMessage(reply, 'palm');
-               const sources = json.paths;
-               const container = document.createElement('ul');
-               window.palmweed.renderSources(sources, container);
+               // const sources = json.paths;
+               // const container = document.createElement('ul');
+               // window.palmweed.renderSources(sources, container);
                window.palmweed.textbox.placeholder = 'Ask PaLM something...';
                window.palmweed.send.disabled = false;
                window.palmweed.textbox.focus();
