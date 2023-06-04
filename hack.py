@@ -6,7 +6,7 @@ def hack(file_path, before, after):
         f.write(text)
 
 before = "'pw_docgen.sphinx.module_metadata',"
-after = f"{before} 'pw_docgen.sphinx.palmweed',"
+after = f"{before} 'pw_docgen.sphinx.embeddings',"
 hack('pigweed/docs/conf.py', before, after)
 
 before = "html_static_path = ['docs/_static']"
@@ -18,7 +18,7 @@ after = f'{before} "_static/palmweed.js",'
 hack('pigweed/docs/BUILD.gn', before, after)
 
 before = '"pw_docgen/sphinx/module_metadata.py",'
-after = f'{before} "pw_docgen/sphinx/palmweed.py",'
+after = f'{before} "pw_docgen/sphinx/embeddings.py",'
 hack('pigweed/pw_docgen/py/BUILD.gn', before, after)
 
 before = '"code_of_conduct.rst",'

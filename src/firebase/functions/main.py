@@ -7,39 +7,58 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as palm
 from datetime import datetime
-from time import sleep
+from time import sleep, time
 import numpy as np
 from traceback import print_exc
 from markdown import markdown
 from hashlib import md5
+from math import ceil
 
-with open('env.json', 'r') as f:
-    env = load(f)
-with open('database.json', 'r') as f:
-    database = load(f)
-# palm.list_models() shows that this is the limit for models/embedding-gecko-001.
-token_limit = 1024
+database = {}
 embedding_model = 'models/embedding-gecko-001'
 chat_model = 'models/text-bison-001'
-service_account_credentials = credentials.Certificate('service_account.json')
-initialize_app(service_account_credentials)
-firestore = firestore_init.client()
-embeddings = firestore.collection('embeddings')
-app = Flask(__name__)
-CORS(app)
-palm.configure(api_key=env['palm'])
+# palm.list_models() shows that this is the limit for models/embedding-gecko-001.
+token_limit = 1024 # TODO: Is this needed anymore?
+firestore = None
+app = None
+embeddings = None
 
-# Load the token count and embedding data from Firebase into the local database.
-docs = embeddings.stream()
-for doc in docs:
-    doc_data = doc.to_dict()
-    checksum = doc.id
-    if checksum not in database:
-        continue
-    if 'token_count' in doc_data:
-        database[checksum]['token_count'] = doc_data['token_count']
-    if 'embedding' in doc_data:
-        database[checksum]['embedding'] = doc_data['embedding']
+# This call initializes all the global variables above.
+init()
+
+def init():
+    with open('env.json', 'r') as f:
+        env = load(f)
+    service_account_credentials = credentials.Certificate('service_account.json')
+    initialize_app(service_account_credentials)
+    firestore = firestore_init.client()
+    embeddings = firestore.collection('embeddings')
+    app = Flask(__name__)
+    CORS(app)
+    palm.configure(api_key=env['palm'])
+    # Load the Firestore embeddings data to the in-memory "database".
+    docs = embeddings.stream()
+    for doc in docs:
+        doc_data = doc.to_dict()
+        checksum = doc.id
+        database[checksum] = doc_data
+    # TODO: Create logic to remove entries that have not been timestamped for one month.
+    # TODO: Call the retry function.
+
+# General utility functions.
+def handle_exception(exception):
+    print(f'Exception: {exception}')
+    print('Exception stack trace:')
+    print_exc()
+    return {'error': exception}
+
+def get_timestamp():
+    return ceil(time())
+
+
+
+def retry_embedding_generation():
+    pass
 
 def closest(target):
     # Calculate how far each docs section is from the target query.
@@ -73,68 +92,34 @@ def closest(target):
     # TODO: Return all matches, not just the first one.
     return matches
 
-def get_docs_context(message):
-    # TODO: Return the context string AND paths.
-    pass
-
-def markdown_to_html(markdown):
-    pass
-
-def normalize_text(text):
-    return text.replace('\n', ' ')
-
-def generate_summary(prompt):
-    response = palm.generate_text(model='models/text-bison-001',
-            prompt=prompt, temperature=0)
-    if response.result is None:
-        return 'PaLM was unable to generate a summary.'
-    return response.result
-
 @app.post('/chat')
 def chat():
     try:
-        print('Chat request received')
-        message = request.get_json()['message']
-        print(f'Message from user: {message}')
-        history = request.get_json()['history']
+        request_data = request.get_json()
+        message = request_data['message']
+        history = request_data['history']
+        uuid = request_data['uuid']
         embedding = palm.generate_embeddings(text=message,
                 model=embedding_model)['embedding']
-        data = closest(embedding)
-        paths = [item['path'] for item in data]
-        print('Semantic search done')
-        docs = [item['text'] for item in data]
-        docs = ' '.join(docs)
-        docs = normalize_text(docs)
-        summary_prompt = f'Summarize the following documentation. Use complete sentences. {docs}'
-        history.append({
-            'author': 'user',
-            'content': summary_prompt
-        })
-        history.append({
-            'author': 'palm',
-            'content': generate_summary(summary_prompt)
-        })
-        history.append({
-            'author': 'user',
-            'content': f'Use the summary from your last reply to respond to this prompt: {message}'
-        })
-        response = palm.chat(messages=history, temperature=0)
-        print('Response from PaLM:')
-        print(response)
-        reply = response.last
-        if reply is None:
-            reply = 'PaLM was unable to answer that.'
-        history.append({
-            'author': 'palm',
-            'content': reply
-        })
-        html = markdown(reply,
-                extensions=['markdown.extensions.fenced_code'])
-        print('HTML generated')
+        # data = closest(embedding)
+        # paths = [item['path'] for item in data]
+        # docs = [item['text'] for item in data]
+        # docs = ' '.join(docs)
+        # docs = normalize_text(docs)
+        response = palm.generate_text(prompt=message, temperature=0)
+        result = response.result
+        # if result is None:
+        #     result = 'PaLM was unable to answer that.'
+        # history.append({
+        #     'author': 'palm',
+        #     'content': reply
+        # })
+        # html = markdown(reply,
+        #         extensions=['markdown.extensions.fenced_code'])
         return {
-            'reply': html,
+            'reply': result,
             'history': history,
-            'paths': paths
+            # 'paths': paths
         }
     except Exception as e:
         return handle_exception(e)
@@ -143,12 +128,6 @@ def embed(text):
     response = palm.generate_embeddings(text=text, model=embedding_model)
     embedding = response['embedding']
     return response['embedding']
-
-def handle_exception(exception):
-    print(f'Exception: {exception}')
-    print('Exception stack trace:')
-    print_exc()
-    return {'error': exception}
 
 @app.post('/generate_embedding')
 def generate_embedding():
@@ -164,11 +143,16 @@ def generate_embedding():
         firebase_ref = embeddings.document(checksum)
         firebase_doc = firebase_ref.get()
         if firebase_doc.exists and 'embedding' in firebase_doc.to_dict():
+            firebase_data = firebase_doc.to_dict()
+            # Refresh the timestamp to indicate that this text is still fresh.
+            firebase_data['timestamp'] = get_timestamp()
+            firebase_ref.set(firebase_data)
             return {'embedding': firebase_doc.to_dict()['embedding']}
         new_data = {
             'text': text,
             'token_count': token_count,
-            'path': path
+            'path': path,
+            'timestamp': get_timestamp()
         }
         # Save early because the the embedding API often fails.
         # Other parts of the server codebase try to complete the embedding

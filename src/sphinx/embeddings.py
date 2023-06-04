@@ -21,12 +21,14 @@ from os import makedirs, remove
 from glob import glob
 from requests import post
 from math import floor, ceil
+from time import sleep
 
-embedding_model_token_limit = 1000
+# TODO: Explain how this relates to the embedding model and chunking logic.
+token_limit = 500
 server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
 
 def split_doc_into_embeddable_chunks(doc, doc_size_in_tokens):
-    num_of_chunks = ceil(doc_size_in_tokens / embedding_model_token_limit)
+    num_of_chunks = ceil(doc_size_in_tokens / token_limit)
     chunk_size_in_tokens = ceil(doc_size_in_tokens / num_of_chunks)
     len_of_doc_in_chars = len(doc)
     chunk_size_in_chars = floor(len_of_doc_in_chars / num_of_chunks)
@@ -62,7 +64,7 @@ def get_token_count(text):
     except Exception as e:
         return None
 
-def generate_embeddings(app, doctree, docname):
+def generate_embeddings_for_docs(app, doctree, docname):
     clone = deepcopy(doctree)
     doc_text = clone.astext()
     # Only covering RPC docs for now.
@@ -86,9 +88,41 @@ def generate_embeddings(app, doctree, docname):
         # For now, it's probably good to slow down these requests because the
         # embedding API has a rate limit of 300 requests per minute.
         post(url, data=dumps(data), headers=headers)
+        sleep(1) # Also to help stay within the rate limits.
+
+def generate_embeddings_for_headers(app, exception):
+    # This is a silly hack to reach allllllllll the way back to the real
+    # Pigweed repo root directory and find the headers there.
+    headers = glob(f'{app.srcdir}/../../../../../pw_*/public/**/*.h', recursive=True)
+    # with open(f'{app.outdir}/headers.json', 'w') as f:
+    #     dump({'headers': headers}, f, indent=4)
+    url = f'{server}/generate_embedding'
+    for header in headers:
+        if 'internal' in header:
+            continue
+        with open(header, 'r') as f:
+            doc_text = f.read()
+        if 'pw_rpc' not in doc_text:
+            continue
+        doc_token_count = get_token_count(doc_text)
+        if doc_token_count is None:
+            return
+        chunks = split_doc_into_embeddable_chunks(doc_text, doc_token_count)
+        for chunk in chunks:
+            headers = {'Content-Type': 'application/json'}
+            target = '/../../../../..'
+            index = header.index(target) + len(target)
+            path = header[index:]
+            data = {
+                'text': chunk['text'],
+                'path': path,
+                'token_count': chunk['token_count']
+            }
+            post(url, data=dumps(data), headers=headers)
 
 def setup(app):
-    app.connect('doctree-resolved', generate_embeddings)
+    app.connect('doctree-resolved', generate_embeddings_for_docs)
+    app.connect('build-finished', generate_embeddings_for_headers)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,
