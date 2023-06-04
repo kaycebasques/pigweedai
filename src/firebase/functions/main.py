@@ -25,6 +25,7 @@ service_account_credentials = credentials.Certificate('service_account.json')
 initialize_app(service_account_credentials)
 firestore = firestore_init.client()
 embeddings = firestore.collection('embeddings')
+chats = firestore.collection('chats')
 app = Flask(__name__)
 CORS(app)
 palm.configure(api_key=env['palm'])
@@ -120,11 +121,20 @@ def chat():
         request_data = request.get_json()
         message = request_data['message']
         uuid = request_data['uuid']
-        data = get_context_and_paths(message)
-        context = data['context']
-        paths = data['paths']
+        ref = chats.document(uuid)
+        doc = ref.get()
+        data = doc.to_dict()
+        if data is None:
+            data = {'convo': []}
+        data['convo'].append({'author': 'user', 'message': message, 'timestamp': get_timestamp()})
+        ref.set(data)
+        context_and_paths = get_context_and_paths(message)
+        context = context_and_paths['context']
+        paths = context_and_paths['paths']
         response = palm.generate_text(prompt=context, temperature=0)
         reply = response.result
+        data['convo'].append({'author': 'palm', 'message': reply, 'context': context, 'timestamp': get_timestamp()})
+        ref.set(data)
         html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
         return {
             'reply': html,
