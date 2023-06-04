@@ -25,7 +25,7 @@ from time import sleep
 
 # TODO: Explain how this relates to the embedding model and chunking logic.
 token_limit = 500
-server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
+server = 'https://server-ic22qaceya-uc.a.run.app'
 
 def split_doc_into_embeddable_chunks(doc, doc_size_in_tokens):
     num_of_chunks = ceil(doc_size_in_tokens / token_limit)
