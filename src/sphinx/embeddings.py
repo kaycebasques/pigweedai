@@ -121,8 +121,8 @@ def generate_embeddings_for_headers(app, exception):
             post(url, data=dumps(data), headers=headers)
 
 def setup(app):
-    app.connect('doctree-resolved', generate_embeddings_for_docs)
-    app.connect('build-finished', generate_embeddings_for_headers)
+    # app.connect('doctree-resolved', generate_embeddings_for_docs)
+    # app.connect('build-finished', generate_embeddings_for_headers)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,

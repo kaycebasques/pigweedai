@@ -19,31 +19,23 @@ embedding_model = 'models/embedding-gecko-001'
 chat_model = 'models/text-bison-001'
 # palm.list_models() shows that this is the limit for models/embedding-gecko-001.
 token_limit = 1024 # TODO: Is this needed anymore?
-firestore = None
-app = None
-embeddings = None
-
-# This call initializes all the global variables above.
-init()
-
-def init():
-    with open('env.json', 'r') as f:
-        env = load(f)
-    service_account_credentials = credentials.Certificate('service_account.json')
-    initialize_app(service_account_credentials)
-    firestore = firestore_init.client()
-    embeddings = firestore.collection('embeddings')
-    app = Flask(__name__)
-    CORS(app)
-    palm.configure(api_key=env['palm'])
-    # Load the Firestore embeddings data to the in-memory "database".
-    docs = embeddings.stream()
-    for doc in docs:
-        doc_data = doc.to_dict()
-        checksum = doc.id
-        database[checksum] = doc_data
-    # TODO: Create logic to remove entries that have not been timestamped for one month.
-    # TODO: Call the retry function.
+with open('env.json', 'r') as f:
+    env = load(f)
+service_account_credentials = credentials.Certificate('service_account.json')
+initialize_app(service_account_credentials)
+firestore = firestore_init.client()
+embeddings = firestore.collection('embeddings')
+app = Flask(__name__)
+CORS(app)
+palm.configure(api_key=env['palm'])
+# Load the Firestore embeddings data to the in-memory "database".
+docs = embeddings.stream()
+for doc in docs:
+    doc_data = doc.to_dict()
+    checksum = doc.id
+    database[checksum] = doc_data
+# TODO: Create logic to remove entries that have not been timestamped for one month.
+# TODO: Call the retry function.
 
 # General utility functions.
 def handle_exception(exception):
@@ -54,8 +46,6 @@ def handle_exception(exception):
 
 def get_timestamp():
     return ceil(time())
-
-
 
 def retry_embedding_generation():
     pass
@@ -107,6 +97,7 @@ def chat():
         # docs = ' '.join(docs)
         # docs = normalize_text(docs)
         response = palm.generate_text(prompt=message, temperature=0)
+        print(response)
         result = response.result
         # if result is None:
         #     result = 'PaLM was unable to answer that.'

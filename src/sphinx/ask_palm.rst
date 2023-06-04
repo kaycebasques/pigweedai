@@ -34,14 +34,14 @@ Ask PaLM
            padding: calc(var(--palmweed-spacing) / 2);
            border-radius: var(--palmweed-border-radius);
        }
-       .palmweed-output-label {
+       .palmweed-label {
            font-style: italic;
            background-color: initial;
        }
-       .palmweed-output-label-user {
+       .palmweed-label-user {
            text-align: right;
        }
-       .palmweed-output-label-palm {
+       .palmweed-label-palm {
            text-align: left;
        }
        .palmweed-output-user {
@@ -54,6 +54,15 @@ Ask PaLM
            overflow-x: scroll;
        }
        .palmweed-output-palm {
+           background-color: white;
+           color: black;
+           max-width: var(--palmweed-message-width);
+           padding: var(--palmweed-spacing);
+           border: var(--palmweed-border-width) solid #b529aa;
+           border-radius: var(--palmweed-border-radius);
+           overflow-x: scroll;
+       }
+       .palmweed-output-palmweed {
            background-color: white;
            color: black;
            max-width: var(--palmweed-message-width);
@@ -76,25 +85,44 @@ Ask PaLM
            send: document.querySelector('#palmweed-send'),
            history: []
        };
-       // TODO: Use `user` / `palm` / `palmweed`.
-       window.palmweed.renderMessage = (message, isUser) => {
+       window.palmweed.renderMessage = (message, role) => {
            let label = document.createElement('p');
-           label.textContent = isUser ? 'You said:' : 'PaLM replied:';
-           label.classList.add(isUser ? 'palmweed-output-label-user' : 'palmweed-output-label-palm');
-           window.palmweed.output.append(label);
            let container = document.createElement('div');
+           label.classList.add('palmweed-label');
+           switch (role) {
+               case 'user':
+                   label.textContent = 'You said:';
+                   label.classList.add('palmweed-label-user');
+                   container.classList.add('palmweed-output-user');
+                   break;
+               case 'palm':
+                   label.textContent = 'PaLM said:';
+                   label.classList.add('palmweed-label-palm');
+                   container.classList.add('palmweed-output-palm');
+                   break;
+               case 'palmweed':
+                   label.textContent = 'Error message from the Palmweed code:';
+                   label.classList.add('palmweed-label-palmweed');
+                   container.classList.add('palmweed-output-palmweed');
+                   break;
+           }
+           window.palmweed.output.append(label);
            container.innerHTML = message;
-           container.classList.add(isUser ? 'palmweed-output-user' : 'palmweed-output-palm');
            window.palmweed.output.append(container);
        };
        window.palmweed.chat = async (message) => {
+           const body = {
+               'message': message,
+               'history': window.palmweed.history,
+               'uuid': window.palmweed.uuid
+           };
            const options = {
                method: 'POST',
                mode: 'cors',
                headers: {
                    'Content-Type': 'application/json',
                },
-               body: JSON.stringify({message, 'history': window.palmweed.history})
+               body: JSON.stringify(body)
            };
            const debug = (new URLSearchParams(window.location.search)).get('debug') === '1';
            const url = debug ?
@@ -109,7 +137,7 @@ Ask PaLM
            const message = window.palmweed.textbox.value;
            window.palmweed.textbox.value = '';
            window.palmweed.textbox.placeholder = 'Getting a response from PaLM. Please wait...';
-           window.palmweed.renderMessage(message, true);
+           window.palmweed.renderMessage(message, 'user');
            const json = await window.palmweed.chat(message);
            if ('error' in json) {
                window.palmweed.send.disabled = false;
@@ -118,12 +146,12 @@ Ask PaLM
                        'This is NOT a message from PaLM, the LLM. ' +
                        'Some kind of error happened in our prototype code. ' +
                        'Sorry about that. Please try again.)';
-               window.palmweed.renderMessage(errorMessage, false)
+               window.palmweed.renderMessage(errorMessage, 'palmweed')
                window.palmweed.textbox.focus();
                return;
            }
            const reply = json.reply;
-           window.palmweed.renderMessage(reply, false);
+           window.palmweed.renderMessage(reply, 'palm');
            window.palmweed.history = json.history;
            console.log(window.palmweed.history);
            window.palmweed.textbox.placeholder = 'Ask PaLM something...';
