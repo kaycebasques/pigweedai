@@ -109,6 +109,10 @@ Ask PaLM
            container.innerHTML = message;
            window.palmweed.output.append(container);
        };
+       window.palmweed.renderSources = (sources, container) => {
+           // TODO this should be handled within renderMessage 
+
+       };
        window.palmweed.chat = (message) => {
            const body = {
                'message': message,
@@ -144,6 +148,9 @@ Ask PaLM
                }
                const reply = json.reply;
                window.palmweed.renderMessage(reply, 'palm');
+               const sources = json.paths;
+               const container = document.createElement('ul');
+               window.palmweed.renderSources(sources, container);
                window.palmweed.textbox.placeholder = 'Ask PaLM something...';
                window.palmweed.send.disabled = false;
                window.palmweed.textbox.focus();

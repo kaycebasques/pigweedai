@@ -63,7 +63,7 @@ def get_token_count(text):
         return response.json()['token_count']
     except Exception as e:
         return None
-
+# TODO: Use doctree.get('title') to get document title.
 def generate_embeddings_for_docs(app, doctree, docname):
     clone = deepcopy(doctree)
     doc_text = clone.astext()
