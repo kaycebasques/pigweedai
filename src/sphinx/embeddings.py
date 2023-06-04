@@ -67,9 +67,8 @@ def get_token_count(text):
 def generate_embeddings_for_docs(app, doctree, docname):
     clone = deepcopy(doctree)
     doc_text = clone.astext()
-    # Only covering RPC docs for now.
-    if 'pw_rpc' not in doc_text:
-        return
+    # if 'pw_rpc' not in doc_text:
+    #     return
     doc_token_count = get_token_count(doc_text)
     if doc_token_count is None:
         return
@@ -102,8 +101,8 @@ def generate_embeddings_for_headers(app, exception):
             continue
         with open(header, 'r') as f:
             doc_text = f.read()
-        if 'pw_rpc' not in doc_text:
-            continue
+        # if 'pw_rpc' not in doc_text:
+        #     continue
         doc_token_count = get_token_count(doc_text)
         if doc_token_count is None:
             return
