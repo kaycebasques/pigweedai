@@ -38,20 +38,22 @@ def split_doc_into_embeddable_chunks(doc, doc_size_in_tokens):
     while chunk_end_index < len_of_doc_in_chars:
         chunk = doc[chunk_start_index:chunk_end_index]
         token_count = get_token_count(chunk)
-        chunks.append({
-            'text': chunk,
-            'token_count': token_count
-        })
+        if token_count > 250:
+            chunks.append({
+                'text': chunk,
+                'token_count': token_count
+            })
         chunk_start_index += chunk_size_in_chars
         chunk_end_index += chunk_size_in_chars
         # Termination case.
         if chunk_end_index > len_of_doc_in_chars:
             chunk = doc[chunk_start_index:chunk_end_index]
             token_count = get_token_count(chunk)
-            chunks.append({
-                'text': chunk,
-                'token_count': token_count
-            })
+            if token_count > 250:
+                chunks.append({
+                    'text': chunk,
+                    'token_count': token_count
+                })
     return chunks
 
 def get_token_count(text):
@@ -63,6 +65,7 @@ def get_token_count(text):
         return response.json()['token_count']
     except Exception as e:
         return None
+
 # TODO: Use doctree.get('title') to get document title.
 def generate_embeddings_for_docs(app, doctree, docname):
     clone = deepcopy(doctree)
@@ -78,6 +81,7 @@ def generate_embeddings_for_docs(app, doctree, docname):
         headers = {'Content-Type': 'application/json'}
         data = {
             'text': chunk['text'],
+            # TODO: Create URL instead.
             'path': app.builder.get_target_uri(docname),
             'token_count': chunk['token_count']
         }
@@ -120,7 +124,7 @@ def generate_embeddings_for_headers(app, exception):
             post(url, data=dumps(data), headers=headers)
 
 def setup(app):
-    # app.connect('doctree-resolved', generate_embeddings_for_docs)
+    app.connect('doctree-resolved', generate_embeddings_for_docs)
     # app.connect('build-finished', generate_embeddings_for_headers)
     return {
         'version': '0.0.0',

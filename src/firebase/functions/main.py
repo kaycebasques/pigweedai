@@ -2,7 +2,7 @@ from firebase_functions import https_fn
 from firebase_functions.options import MemoryOption
 from firebase_admin import initialize_app, firestore as firestore_init, credentials
 from firebase_admin.exceptions import FirebaseError
-from json import load
+from json import load, dumps
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as palm
@@ -13,10 +13,11 @@ from traceback import print_exc
 from markdown import markdown
 from hashlib import md5
 from math import ceil
+from xml.sax.saxutils import escape
 
 database = {}
 embedding_model = 'models/embedding-gecko-001'
-chat_model = 'models/text-bison-001'
+chat_model = 'models/text-bison-001' # TODO: Should be chat-bison
 # palm.list_models() shows that this is the limit for models/embedding-gecko-001.
 token_limit = 1024 # TODO: Is this needed anymore?
 with open('env.json', 'r') as f:
@@ -43,7 +44,7 @@ def handle_exception(exception):
     print(f'Exception: {exception}')
     print('Exception stack trace:')
     print_exc()
-    return {'error': exception}
+    return {'error': 'Something broke...'}
 
 def get_timestamp():
     return ceil(time())
@@ -71,7 +72,7 @@ def closest(target):
     tokens = 0
     # Keep this below the model's maximum limit so that there is space for the user's
     # query and for the prompt instructions.
-    limit = 4000
+    limit = 5000
     matches = []
     for item in calculations:
         if tokens > limit:
@@ -88,60 +89,50 @@ def debug():
     response = palm.chat(messages='Hello!')
     return response.last
 
-def get_context_and_paths(message):
-    embedding = palm.generate_embeddings(text=message,
-            model=embedding_model)['embedding']
-    data = closest(embedding)
-    paths = [item['path'] for item in data]
-    documentation = '<documentation>'
-    for item in data:
-        text = item['text']
-        path = item['path']
-        documentation += f'<document><excerpt>{text}</excerpt><path>{path}</path></document>'
-    documentation += '</documentation>'
-    context = [
-        'You are a friendly expert in developing embedded systems with Pigweed modules and tools.',
-        'Answer this question from a Pigweed user:',
-        f'<question>{message}</question>',
-        "Summarize this documentation and use your summary in your answer:",
-        documentation
-    ]
-    context = ' '.join(context)
-    context = context.replace('\n', ' ')
-    return {'context': context, 'paths': paths}
-
 def update_chat_logs(uuid, author, message, context=None):
+    ref = chats.document(uuid)
+    doc = ref.get()
+    data = doc.to_dict()
+    if data is None:
+        data = {'convo': []}
+    data['convo'].append({'author': 'user', 'message': message, 'timestamp': get_timestamp()})
+    ref.set(data)
+    data['convo'].append({'author': 'palm', 'message': reply, 'context': context, 'timestamp': get_timestamp()})
+    ref.set(data)
+
     # author message timestamp for user messages
     # author message timestamp context paths for palm
     pass
 
+def create_context(message):
+    embedding = palm.generate_embeddings(text=message,
+            model=embedding_model)['embedding']
+    data = closest(embedding)
+    context = [item['text'] for item in data]
+    context = ' '.join(context)
+    context = f'Use this information in your answer: {context}'
+    context = context.replace('\n', ' ')
+    return context
+
 @app.post('/chat')
 def chat():
     try:
-        request_data = request.get_json()
-        message = request_data['message']
-        uuid = request_data['uuid']
-        ref = chats.document(uuid)
-        doc = ref.get()
-        data = doc.to_dict()
-        if data is None:
-            data = {'convo': []}
-        data['convo'].append({'author': 'user', 'message': message, 'timestamp': get_timestamp()})
-        ref.set(data)
-        context_and_paths = get_context_and_paths(message)
-        context = context_and_paths['context']
-        paths = context_and_paths['paths']
-        response = palm.generate_text(prompt=context, temperature=0)
-        reply = response.result
-        data['convo'].append({'author': 'palm', 'message': reply, 'context': context, 'timestamp': get_timestamp()})
-        ref.set(data)
+        data = request.get_json()
+        message = data['message']
+        uuid = data['uuid']
+        context = create_context(message)
+        # TODO: Escape the JSON string.
+        # response = palm.generate_text(prompt=dumps(context), temperature=0)
+        # reply = response.result
+        model = 'models/chat-bison-001'
+        response = palm.chat(messages=message, context=context, temperature=0, model=model)
+        # response = palm.chat(messages=message, temperature=0, model=model)
+        reply = response.last
         html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
         return {
-            'reply': html,
-            'paths': paths
+            'reply': html
         }
     except Exception as e:
-        print(locals()) # TODO: Always pass locals to exception handler?
         return handle_exception(e)
 
 def embed(text):
