@@ -31,7 +31,7 @@ Ask Pigweed AI
            border-radius: var(--pigweedai-border-radius);
        }
        #pigweedai-send {
-           padding: calc(var(--pigweedai-spacing) / 2);
+           padding: var(--pigweedai-spacing);
            border-radius: var(--pigweedai-border-radius);
        }
        .pigweedai-label {
@@ -71,32 +71,36 @@ Ask Pigweed AI
            border-radius: var(--pigweedai-border-radius);
            overflow-x: scroll;
        }
+       .pigweedai-feedback-textbox {
+           border-radius: var(--pigweedai-border-radius);
+           padding: var(--pigweedai-spacing);
+           margin-right: var(--pigweedai-spacing);
+           width: 75%;
+       }
+       .pigweedai-feedback-button {
+           border-radius: var(--pigweedai-border-radius);
+           padding: var(--pigweedai-spacing);
+       }
    </style>
    <p>
        Welcome! This is a prototype of a
-       <a href="https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation">retrieval-augmented generation</a>
-       search experience for the <a href="https://pigweed.dev">Pigweed</a> docs. Notes:
+       <a href="https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation">retrieval-augmented
+       generation</a> search experience for the <a href="https://pigweed.dev">Pigweed</a> docs.
    </p>
    <ul>
        <li>
            This is not an official Google product. This is a hacked together prototype by Kayce Basques.
            I am a Googler but I have not sought out permission to publish this prototype.
+           All responsibility my own.
        </li>
        <li>
-           DO NOT LOG PERSONAL OR CONFIDENTIAL INFORMATION!!!
+           DO NOT ENTER PERSONAL OR CONFIDENTIAL INFORMATION!!!
            Your messages are sent to OpenAI. They're also logged in Firestore for
-           quality assurance.
+           quality assurance. They may also be logged publicly in the future.
        </li>
        <li>
-           Although this UI is presented like a chat conversation, it is not actually.
-           The LLM will not remember your conversation history.
-       </li>
-       <li>
-           The LLM is currently powered by OpenAI. Eventually I'll switch over to 
-           <a href="https://developers.generativeai.google/guide/palm_api_overview">PaLM</a>.
-       </li>
-       <li>
-           The code is all <a href="https://github.com/kaycebasques/pigweedai">open source</a>!
+           See the <a href="https://github.com/kaycebasques/pigweedai/blob/main/README.md">README</a>
+           for more information.
        </li>
    </ul>
    <div id="pigweedai-output"></div>
@@ -113,7 +117,7 @@ Ask Pigweed AI
            history: [],
        };
        // TODO: renderSources and renderFeedbackWidgets
-       window.pigweedai.renderMessage = (message, role, links) => {
+       window.pigweedai.renderMessage = (message, role, links, id) => {
            let label = document.createElement('p');
            let container = document.createElement('div');
            let reply = document.createElement('div');
@@ -148,6 +152,42 @@ Ask Pigweed AI
                sourcesContainer.innerHTML = anchors;
                container.append(sourcesContainer);
            }
+           if (id) {
+               let idContainer = document.createElement('div');
+               let textbox = document.createElement('input');
+               textbox.type = 'text';
+               textbox.id = id;
+               textbox.placeholder = 'Leave feedback on this reply...';
+               textbox.classList.add('pigweedai-feedback-textbox');
+               let button = document.createElement('button');
+               button.textContent = 'Send';
+               button.classList.add('pigweedai-feedback-button');
+               button.addEventListener('click', () => {
+                   const body = {
+                       'message_id': id,
+                       'feedback': document.querySelector(`#${id}`).value,
+                       'uuid': window.pigweedai.uuid
+                   };
+                   const options = {
+                       method: 'POST',
+                       mode: 'cors',
+                       headers: {
+                           'Content-Type': 'application/json',
+                       },
+                       body: JSON.stringify(body)
+                   };
+                   const debug = (new URLSearchParams(window.location.search)).get('debug') === '1';
+                   const url = debug ?
+                           'http://127.0.0.1:5001/palmweed-prototype/us-central1/server/send_feedback' :
+                           'https://server-ic22qaceya-uc.a.run.app/send_feedback';
+                   fetch(url, options).catch(error => console.log(error));
+                   document.querySelector(`#${id}`).value = '';
+                   document.querySelector(`#${id}`).placeholder = 'Feedback sent!';
+               });
+               idContainer.append(textbox);
+               idContainer.append(button);
+               container.append(idContainer);
+           }
            window.pigweedai.output.append(container);
        };
        window.pigweedai.renderErrorMessage = () => {
@@ -156,7 +196,7 @@ Ask Pigweed AI
                    'in the prototype code. Sorry about that. Please try a different ' +
                    'question.)';
            window.pigweedai.send.disabled = false;
-           window.pigweedai.renderMessage(errorMessage, 'pigweedai', null);
+           window.pigweedai.renderMessage(errorMessage, 'pigweedai', null, null);
            window.pigweedai.textbox.focus();
        };
        window.pigweedai.chat = (message) => {
@@ -191,7 +231,8 @@ Ask Pigweed AI
                }
                const reply = json.reply;
                const links = json.links;
-               window.pigweedai.renderMessage(reply, 'assistant', links);
+               const id = json.id;
+               window.pigweedai.renderMessage(reply, 'assistant', links, id);
                window.pigweedai.history = json.history;
                window.pigweedai.textbox.placeholder = 'Ask Pigweed AI something...';
                window.pigweedai.send.disabled = false;
@@ -207,7 +248,7 @@ Ask Pigweed AI
            window.pigweedai.textbox.value = '';
            window.pigweedai.textbox.placeholder =
                    'Getting a response from Pigweed AI. It usually takes 10-60 seconds. Please wait...';
-           window.pigweedai.renderMessage(message, 'user', null);
+           window.pigweedai.renderMessage(message, 'user', null, null);
            window.pigweedai.chat(message);
        });
    </script>

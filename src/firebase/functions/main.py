@@ -93,12 +93,6 @@ def find_relevant_docs(target):
         current_token_count += item['token_count']
     return results
 
-def update_chat_logs(uuid, author, message, context=None):
-
-    # author message timestamp for user messages
-    # author message timestamp context paths for palm
-    pass
-
 def create_context(message):
     embedding = create_openai_embedding(message)
     data = find_relevant_docs(embedding)
@@ -110,8 +104,7 @@ def create_context(message):
         links.append({'title': item['title'], 'url': item['url']})
         unique_urls.add(item['url'])
     # TODO: Should we add links into the context that the LLM sees?
-    sections = [item['text'] for item in data]
-    sections = ''.join(sections)
+    sections = ''.join([item['text'] for item in data])
     document = f'<document>{sections}</document>'
     question = f'<question>{message}</question>'
     context = (
@@ -150,17 +143,20 @@ def chat():
         context = context_data['context']
         links = context_data['links']
         messages = {'role': 'user', 'content': context}
+        response = openai.ChatCompletion.create(model='gpt-3.5-turbo', messages=[messages],
+                temperature=0, max_tokens=openai_output_token_limit)
+        question_id = f'question{get_timestamp()}'
+        messages['question_id'] = question_id
         # The history is only logged for our own analysis. It's not
         # sent to the LLM. I.e. the LLM has no knowledge of the convo history.
         history.append(messages)
-        response = openai.ChatCompletion.create(model='gpt-3.5-turbo', messages=[messages],
-                temperature=0, max_tokens=openai_output_token_limit)
         reply = response.choices[0].message.content
-        history.append({'role': 'assistant', 'content': reply})
+        reply_id = f'reply{get_timestamp()}'
+        history.append({'role': 'assistant', 'content': reply, 'question_id': question_id, 'reply_id': reply_id})
         ref = chats.document(uuid)
         ref.set({'history': history})
         html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
-        return {'reply': html, 'history': history, 'links': links}
+        return {'reply': html, 'history': history, 'links': links, 'id': reply_id}
     except Exception as e:
         print(e)
         return {'ok': False}
@@ -187,6 +183,30 @@ def create_embedding():
         data['openai_token_count'] = openai_token_count
         data['openai'] = openai_embedding
         ref.set(data)
+        return {'ok': True}
+    except Exception as e:
+        return {'ok': False}
+
+@app.post('/send_feedback')
+def send_feedback():
+    print('POST /send_feedback')
+    try:
+        data = request.get_json()
+        message_id = data['message_id']
+        uuid = data['uuid']
+        feedback = data['feedback']
+        ref = chats.document(uuid)
+        doc = ref.get()
+        if not doc.exists:
+            return {'ok': False}
+        doc_data = doc.to_dict()
+        for message in doc_data['history']:
+            if message['role'] != 'assistant':
+                continue
+            if message['reply_id'] != message_id:
+                continue
+            message['feedback'] = feedback
+            ref.set(doc_data)
         return {'ok': True}
     except Exception as e:
         return {'ok': False}
