@@ -88,20 +88,12 @@ def find_relevant_docs(target):
             database[checksum] = data
         clone = dict(database[checksum])
         clone.pop('openai')
+        clone.pop('openai_token_count')
         results.append(clone)
         current_token_count += item['token_count']
     return results
 
 def update_chat_logs(uuid, author, message, context=None):
-    ref = chats.document(uuid)
-    doc = ref.get()
-    data = doc.to_dict()
-    if data is None:
-        data = {'convo': []}
-    data['convo'].append({'author': 'user', 'message': message, 'timestamp': get_timestamp()})
-    ref.set(data)
-    data['convo'].append({'author': 'palm', 'message': reply, 'context': context, 'timestamp': get_timestamp()})
-    ref.set(data)
 
     # author message timestamp for user messages
     # author message timestamp context paths for palm
@@ -110,20 +102,25 @@ def update_chat_logs(uuid, author, message, context=None):
 def create_context(message):
     embedding = create_openai_embedding(message)
     data = find_relevant_docs(embedding)
+    links = []
+    for item in data:
+        links.append({'title': item['title'], 'url': item['url']})
+    # TODO: Should we add links into the context that the LLM sees?
     sections = [item['text'] for item in data]
     sections = ''.join(sections)
-    document = f'<document>{sections}</document>'
+    documentation = f'<document>{sections}</document>'
     question = f'<question>{message}</question>'
     instructions = [
         'Pigweed (https://pigweed.dev) is a software project that makes embedded system development easier.',
         'You are a friendly expert in developing embedded systems with Pigweed.',
         'Answer the following question about Pigweed. The question is everything between <question> and </question>.',
         question,
+        'Output Markdown.',
         'Use information from the following Docutils document in your answer.',
-        document
+        documentation
     ]
     context = ' '.join(instructions)
-    return context
+    return {'context': context, 'links': links}
 
 def create_openai_embedding(text):
     response = openai.Embedding.create(input=[text], model=openai_embedding_model)
@@ -144,17 +141,23 @@ def chat():
         message = data['message']
         uuid = data['uuid']
         history = data['history']
-        context = create_context(message)
-        history.append({'role': 'user', 'content': context})
-        response = openai.ChatCompletion.create(model='gpt-3.5-turbo',
-                messages=messages, temperature=0, max_tokens=openai_output_token_limit)
+        context_data = create_context(message)
+        context = context_data['context']
+        links = context_data['links']
+        messages = {'role': 'user', 'content': context}
+        # The history is only logged for our own analysis. It's not
+        # sent to the LLM. I.e. the LLM has no knowledge of the convo history.
+        history.append(messages)
+        response = openai.ChatCompletion.create(model='gpt-3.5-turbo', messages=[messages],
+                temperature=0, max_tokens=openai_output_token_limit)
         reply = response.choices[0].message.content
-        return {'reply': reply, 'history': history}
-        # html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
-        # return {
-        #     'reply': html
-        # }
+        history.append({'role': 'assistant', 'content': reply})
+        ref = chats.document(uuid)
+        ref.set({'history': history})
+        html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
+        return {'reply': html, 'history': history, 'links': links}
     except Exception as e:
+        print(e)
         return {'ok': False}
 
 @app.post('/create_embedding')
@@ -186,6 +189,7 @@ def create_embedding():
 @app.get('/debug')
 def debug():
     print('GET /debug')
+    create_context('Hello, world!')
     return {'ok': True}
 
 @app.get('/ping')

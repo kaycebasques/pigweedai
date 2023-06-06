@@ -7,10 +7,10 @@ function reset_docs_repo() {
     cd ..
 }
 
-function hack_palmweed_into_docs_repo() {
-    cp src/sphinx/palmweed.js pigweed/docs/_static/palmweed.js
+function hack_pigweedai_into_docs_repo() {
+    cp src/sphinx/pigweedai.js pigweed/docs/_static/pigweedai.js
     cp src/sphinx/embeddings.py pigweed/pw_docgen/py/pw_docgen/sphinx/embeddings.py
-    cp src/sphinx/ask_palm.rst pigweed/docs/ask_palm.rst
+    cp src/sphinx/ask_pigweed_ai.rst pigweed/docs/ask_pigweed_ai.rst
     python3 hack.py
 }
 
@@ -21,10 +21,8 @@ function build_docs() {
     ninja -C out docs
     deactivate
     cd ..
-    # mv pigweed/out/docs/gen/docs/html/embeddings/database.json \
-    #         src/firebase/functions/database.json
 }
 
 reset_docs_repo
-hack_palmweed_into_docs_repo
+hack_pigweedai_into_docs_repo
 time build_docs
