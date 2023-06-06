@@ -23,6 +23,7 @@ server = 'https://server-ic22qaceya-uc.a.run.app'
 if 'kayce' in getcwd():
     server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
 create_embedding_url = f'{server}/create_embedding'
+ping_url = f'{server}/ping'
 
 def init(app):
     # Throws an unhandled exception if the server isn't available.
@@ -33,7 +34,7 @@ def find_title(doctree):
         if node.tagname == 'title':
             return node.astext()
 
-def create_embedding(text, token_count, title, url):
+def create_embedding(text, title, url):
     headers = {'Content-Type': 'application/json'}
     data = {
         'text': text,
@@ -43,8 +44,6 @@ def create_embedding(text, token_count, title, url):
     post(create_embedding_url, data=dumps(data), headers=headers)
 
 def create_embeddings(app, doctree, docname):
-    if 'pw_rpc' not in docname:
-        return
     clone = deepcopy(doctree)
     title = find_title(clone)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
