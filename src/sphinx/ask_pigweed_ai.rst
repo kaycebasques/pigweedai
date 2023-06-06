@@ -72,9 +72,34 @@ Ask Pigweed AI
            overflow-x: scroll;
        }
    </style>
+   <p>
+       Welcome! This is a prototype of a
+       <a href="https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation">retrieval-augmented generation</a>
+       search experience for the <a href="https://pigweed.dev">Pigweed</a> docs. Notes:
+   </p>
+   <ul>
+       <li>
+           This is not an official Google product. This is a hacked together prototype by Kayce Basques.
+           I am a Googler but I have not sought out permission to publish this prototype.
+       </li>
+       <li>
+           DO NOT LOG PERSONAL OR CONFIDENTIAL INFORMATION!!!
+           Your messages are sent to OpenAI. They're also logged in Firestore for
+           quality assurance.
+       </li>
+       <li>
+           The LLM is currently powered by OpenAI. Eventually I'll switch over to 
+           <a href="https://developers.generativeai.google/guide/palm_api_overview">PaLM</a>.
+       </li>
+       <li>
+           The code is all open source! It's basically just a Sphinx extension, a Firestore database,
+           a few Firebase Functions, and a bunch of Bash scripts to glue everything together.
+       </li>
+       <li>Just in case you did not see the earlier note... DO NOT LOG PERSONAL OR CONFIDENTIAL INFORMATION!!!</li>
+   </ul>
    <div id="pigweedai-output"></div>
    <div id="pigweedai-input">
-       <textarea id="pigweedai-textbox" rows="3" placeholder="Ask PaLM something..."></textarea>
+       <textarea id="pigweedai-textbox" rows="3" placeholder="Ask Pigweed AI something..."></textarea>
        <button id="pigweedai-send">Send</button>
    </div>
    <script>
@@ -83,10 +108,10 @@ Ask Pigweed AI
            output: document.querySelector('#pigweedai-output'),
            textbox: document.querySelector('#pigweedai-textbox'),
            send: document.querySelector('#pigweedai-send'),
-           history: []
+           history: [],
        };
        // TODO: renderSources and renderFeedbackWidgets
-       window.pigweedai.renderMessage = (message, role) => {
+       window.pigweedai.renderMessage = (message, role, links) => {
            let label = document.createElement('p');
            let container = document.createElement('div');
            let reply = document.createElement('div');
@@ -98,7 +123,7 @@ Ask Pigweed AI
                    container.classList.add('pigweedai-output-user');
                    break;
                case 'assistant':
-                   label.textContent = 'PaLM said:';
+                   label.textContent = 'Pigweed AI said:';
                    label.classList.add('pigweedai-label-assistant');
                    container.classList.add('pigweedai-output-assistant');
                    break;
@@ -109,8 +134,28 @@ Ask Pigweed AI
                    break;
            }
            window.pigweedai.output.append(label);
-           container.innerHTML = message;
+           reply.innerHTML = message;
+           container.append(reply);
+           if (links) {
+               let sourcesContainer = document.createElement('ul');
+               let anchors = '';
+               links.forEach(link => {
+                   const anchor = `<li><a href="${link.url}">${link.title}</a></li>`;
+                   anchors += anchor;
+               });
+               sourcesContainer.innerHTML = anchors;
+               container.append(sourcesContainer);
+           }
            window.pigweedai.output.append(container);
+       };
+       window.pigweedai.renderErrorMessage = () => {
+           const errorMessage = '(This is a message from the prototype code. ' +
+                   'This is NOT a message from an LLM. Some kind of error happened ' +
+                   'in the prototype code. Sorry about that. Please try a different ' +
+                   'question.)';
+           window.pigweedai.send.disabled = false;
+           window.pigweedai.renderMessage(errorMessage, 'pigweedai', null);
+           window.pigweedai.textbox.focus();
        };
        window.pigweedai.chat = (message) => {
            const body = {
@@ -130,6 +175,8 @@ Ask Pigweed AI
            const url = debug ?
                    'http://127.0.0.1:5001/palmweed-prototype/us-central1/server/chat' :
                    'https://server-ic22qaceya-uc.a.run.app/chat';
+           // Using traditional, nested promises because it was too hard to
+           // reason about correct try/catch logic for async code.
            fetch(url, options).then(response => {
                if (response.ok) {
                    return response.json();
@@ -137,38 +184,28 @@ Ask Pigweed AI
                throw new Error('Something went wrong...');
            }).then(json => {
                if (!('reply' in json)) {
-                   window.pigweedai.send.disabled = false;
-                   const errorMessage = '(This is a message from the Palmweed code. ' +
-                           'This is NOT a message from PaLM. ' +
-                           'Some kind of error happened. Sorry about that. ' +
-                           'Please try a different question.)';
-                   window.pigweedai.renderMessage(errorMessage, 'pigweedai')
-                   window.pigweedai.textbox.focus();
+                   window.pigweedai.renderErrorMessage();
                    return;
                }
                const reply = json.reply;
                const links = json.links;
                window.pigweedai.renderMessage(reply, 'assistant', links);
                window.pigweedai.history = json.history;
-               window.pigweedai.textbox.placeholder = 'Ask PaLM something...';
+               window.pigweedai.textbox.placeholder = 'Ask Pigweed AI something...';
                window.pigweedai.send.disabled = false;
                window.pigweedai.textbox.focus();
            }).catch(error => {
-               window.pigweedai.send.disabled = false;
-               const errorMessage = '(This is a message from the Palmweed code. ' +
-                       'This is NOT a message from PaLM. ' +
-                       'Some kind of error happened. Sorry about that. ' +
-                       'Please try a different prompt.)';
-               window.pigweedai.renderMessage(errorMessage, 'pigweedai')
-               window.pigweedai.textbox.focus();
+               window.pigweedai.renderErrorMessage();
+               return;
            });
        };
        window.pigweedai.send.addEventListener('click', () => {
            window.pigweedai.send.disabled = true;
            const message = window.pigweedai.textbox.value;
            window.pigweedai.textbox.value = '';
-           window.pigweedai.textbox.placeholder = 'Getting a response from PaLM. Please wait...';
-           window.pigweedai.renderMessage(message, 'user');
+           window.pigweedai.textbox.placeholder =
+                   'Getting a response from Pigweed AI. It usually takes 10-60 seconds. Please wait...';
+           window.pigweedai.renderMessage(message, 'user', null);
            window.pigweedai.chat(message);
        });
    </script>
