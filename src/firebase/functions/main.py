@@ -112,18 +112,16 @@ def create_context(message):
     # TODO: Should we add links into the context that the LLM sees?
     sections = [item['text'] for item in data]
     sections = ''.join(sections)
-    documentation = f'<document>{sections}</document>'
+    document = f'<document>{sections}</document>'
     question = f'<question>{message}</question>'
-    instructions = [
-        'Pigweed (https://pigweed.dev) is a software project that makes embedded system development easier.',
-        'You are a friendly expert in developing embedded systems with Pigweed.',
-        'Answer the following question about Pigweed. The question is everything between <question> and </question>.',
-        question,
-        'Output Markdown.',
-        'Use information from the following Docutils document in your answer.',
-        documentation
-    ]
-    context = ' '.join(instructions)
+    context = (
+        'The user is developing an embedded system with Pigweed, the software project.'
+        'Answer the following question about Pigweed. The question is everything between <question> and </question>.'
+       f'{question}'
+        'Answer in Markdown.'
+        'Parse the following Docutils document and use its information in your answer. Do not mention Docutils.'
+       f'{document}'
+    )
     return {'context': context, 'links': links}
 
 def create_openai_embedding(text):
