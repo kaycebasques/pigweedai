@@ -17,9 +17,9 @@ function bootstrap_firebase() {
     cd src/firebase
     npm i
     cd functions
-    python3.11 -m venv venv
+    python3 -m venv venv
     source venv/bin/activate
-    python3.11 pip install -r requirements.txt
+    python3 pip install -r requirements.txt
 }
 
 bootstrap_docs_repo
