@@ -1,11 +1,11 @@
 from firebase_admin import initialize_app, firestore as _firestore, credentials
 from json import load
 
-with open('firebase/functions/env.json', 'r') as f:
+with open('src/firebase/functions/env.json', 'r') as f:
     env = load(f)
-with open('firebase/functions/database.json', 'r') as f:
+with open('src/firebase/functions/database.json', 'r') as f:
     database = load(f)
-service_account_credentials = credentials.Certificate('firebase/functions/service_account.json')
+service_account_credentials = credentials.Certificate('src/firebase/functions/service_account.json')
 initialize_app(service_account_credentials)
 firestore = _firestore.client()
 
