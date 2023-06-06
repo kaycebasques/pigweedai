@@ -88,14 +88,16 @@ Ask Pigweed AI
            quality assurance.
        </li>
        <li>
+           Although this UI is presented like a chat conversation, it is not actually.
+           The LLM will not remember your conversation history.
+       </li>
+       <li>
            The LLM is currently powered by OpenAI. Eventually I'll switch over to 
            <a href="https://developers.generativeai.google/guide/palm_api_overview">PaLM</a>.
        </li>
        <li>
-           The code is all open source! It's basically just a Sphinx extension, a Firestore database,
-           a few Firebase Functions, and a bunch of Bash scripts to glue everything together.
+           The code is all <a href="https://github.com/kaycebasques/pigweedai">open source</a>!
        </li>
-       <li>Just in case you did not see the earlier note... DO NOT LOG PERSONAL OR CONFIDENTIAL INFORMATION!!!</li>
    </ul>
    <div id="pigweedai-output"></div>
    <div id="pigweedai-input">

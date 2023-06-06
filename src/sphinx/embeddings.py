@@ -20,7 +20,7 @@ from os import getcwd
 from requests import post, get
 
 server = 'https://server-ic22qaceya-uc.a.run.app'
-if 'kayce' in getcwd():
+if '/home/kayce/repos' in getcwd():
     server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
 create_embedding_url = f'{server}/create_embedding'
 ping_url = f'{server}/ping'
