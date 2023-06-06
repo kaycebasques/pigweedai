@@ -44,6 +44,9 @@ def create_embedding(text, title, url):
     post(create_embedding_url, data=dumps(data), headers=headers)
 
 def create_embeddings(app, doctree, docname):
+    # TODO: Make this ignore logic more generic.
+    if 'ask_pigweed_ai' in docname:
+        return
     clone = deepcopy(doctree)
     title = find_title(clone)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
