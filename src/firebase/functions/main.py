@@ -139,6 +139,9 @@ def chat():
     try:
         data = request.get_json()
         message = data['message']
+        response = openai.Moderation.create(input=message)
+        if response['results'][0]['flagged']:
+            return {'ok': False}
         uuid = data['uuid']
         history = data['history']
         context_data = create_context(message)
