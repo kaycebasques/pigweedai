@@ -8,10 +8,9 @@ function reset_docs_repo() {
 }
 
 function hack_pigweedai_into_docs_repo() {
-    cp src/sphinx/pigweedai.js pigweed/docs/_static/pigweedai.js
     cp src/sphinx/embeddings.py pigweed/pw_docgen/py/pw_docgen/sphinx/embeddings.py
     cp src/sphinx/ask_pigweed_ai.rst pigweed/docs/ask_pigweed_ai.rst
-    python3 hack.py
+    python3 scripts/hack.py
 }
 
 function build_docs() {

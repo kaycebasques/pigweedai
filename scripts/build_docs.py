@@ -9,14 +9,6 @@ before = "'pw_docgen.sphinx.module_metadata',"
 after = f"{before} 'pw_docgen.sphinx.embeddings',"
 hack('pigweed/docs/conf.py', before, after)
 
-before = "html_static_path = ['docs/_static']"
-after = f"{before}\nhtml_js_files = ['pigweedai.js']"
-hack('pigweed/docs/conf.py', before, after)
-
-before = '"_static/css/pigweed.css",'
-after = f'{before} "_static/pigweedai.js",'
-hack('pigweed/docs/BUILD.gn', before, after)
-
 before = '"pw_docgen/sphinx/module_metadata.py",'
 after = f'{before} "pw_docgen/sphinx/embeddings.py",'
 hack('pigweed/pw_docgen/py/BUILD.gn', before, after)

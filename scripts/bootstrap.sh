@@ -9,7 +9,7 @@ function bootstrap_docs_repo() {
 }
 
 function build_docs() {
-    source build_docs.sh
+    source scripts/build_docs.sh
 }
 
 bootstrap_docs_repo
