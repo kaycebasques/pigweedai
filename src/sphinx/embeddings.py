@@ -26,6 +26,9 @@ create_embedding_url = f'{server}/create_embedding'
 ping_url = f'{server}/ping'
 debug_url = f'{server}/debug_url'
 
+# TODO: Send a GET to query the database for all documents that have good
+# data. We can then check that list of checksums locally and only send off
+# embedding generation requests when needed.
 def init(app):
     # Throws an unhandled exception if the server isn't available.
     get(server)
