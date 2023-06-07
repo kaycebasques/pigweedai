@@ -10,7 +10,7 @@ function reset_docs_repo() {
 function hack_pigweedai_into_docs_repo() {
     cp src/sphinx/embeddings.py pigweed/pw_docgen/py/pw_docgen/sphinx/embeddings.py
     cp src/sphinx/ask_pigweed_ai.rst pigweed/docs/ask_pigweed_ai.rst
-    python3 scripts/build_docs.py
+    python3 scripts/_build_docs.py
 }
 
 function build_docs() {
