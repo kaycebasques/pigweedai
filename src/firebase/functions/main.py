@@ -31,7 +31,7 @@ openai_embedding_model = 'text-embedding-ada-002'
 openai_encoder = get_encoding('cl100k_base')
 openai_chat_model = 'gpt-3.5-turbo'
 openai_total_token_limit = 4096
-openai_input_token_limit = 3000
+openai_input_token_limit = 2800
 openai_output_token_limit = 1000
 # Load the Firestore embeddings data to the in-memory "database".
 docs = embeddings.stream()
