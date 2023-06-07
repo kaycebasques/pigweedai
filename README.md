@@ -37,6 +37,7 @@ service account there:
   "client_x509_cert_url": "...",
   "universe_domain": "..."
 }
+```
 
 Run the bootstrap script from the root directory of this repo:
 
