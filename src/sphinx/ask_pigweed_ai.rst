@@ -148,7 +148,7 @@ Ask Pigweed AI
                let sourcesContainer = document.createElement('ul');
                let html = '<p>Sources:</p>';
                links.forEach(link => {
-                   const anchor = `<li><a href="${link.url}">${link.title}</a></li>`;
+                   const anchor = `<li><a href="${link.url}" target="_blank">${link.title}</a></li>`;
                    html += anchor;
                });
                sourcesContainer.innerHTML = html;
