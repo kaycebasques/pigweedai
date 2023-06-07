@@ -166,22 +166,28 @@ def create_embedding():
     print('POST /create_embedding')
     try:
         data = request.get_json()
+        print(data['title'])
+        print(data['url'])
         text = data['text']
         checksum = md5(text.encode('utf-8')).hexdigest()
-        data['timestamp'] = get_timestamp()
         ref = embeddings.document(checksum)
         firestore_doc = ref.get()
-        firestore_data = firestore_doc.to_dict() if firestore_doc.exists else None
-        openai_embedding = None
-        openai_token_count = None
-        ok = firestore_data is not None
-        ok = ok and firestore_data['openai'] is not None
-        ok = ok and firestore_data['openai_token_count'] is not None
-        if not ok:
-            openai_embedding = create_openai_embedding(text)
-            openai_token_count = get_openai_token_count(text)
-        data['openai_token_count'] = openai_token_count
-        data['openai'] = openai_embedding
+        if firestore_doc.exists:
+            print('Doc found')
+            firestore_data = firestore_doc.to_dict()
+            if not 'openai' in firestore_data or firestore_data['openai'] is None:
+                print('Embeddings data was missing...')
+                data['openai'] = create_openai_embedding(text)
+                data['openai_token_count'] = get_openai_token_count(text)
+            else:
+                print('Embeddings data OK...')
+                data['openai'] = firestore_data['openai']
+                data['openai_token_count'] = firestore_data['openai_token_count']
+        else:
+            print('Doc did not exist...')
+            data['openai'] = create_openai_embedding(text)
+            data['openai_token_count'] = get_openai_token_count(text)
+        data['timestamp'] = get_timestamp()
         ref.set(data)
         return {'ok': True}
     except Exception as e:
@@ -211,6 +217,13 @@ def send_feedback():
     except Exception as e:
         return {'ok': False}
 
+@app.post('/debug')
+def post_debug():
+    print('POST /debug')
+    data = request.get_json()
+    print(data)
+    return {'ok': True}
+
 @app.get('/debug')
 def debug():
     print('GET /debug')
@@ -222,7 +235,7 @@ def ping():
     print('GET /ping')
     return {'ok': True}
 
-@https_fn.on_request(timeout_sec=120, memory=MemoryOption.MB_512)
+@https_fn.on_request(timeout_sec=120, memory=MemoryOption.GB_1)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()

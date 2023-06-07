@@ -24,6 +24,7 @@ if '/home/kayce/repos' in getcwd():
     server = 'http://127.0.0.1:5001/palmweed-prototype/us-central1/server'
 create_embedding_url = f'{server}/create_embedding'
 ping_url = f'{server}/ping'
+debug_url = f'{server}/debug_url'
 
 def init(app):
     # Throws an unhandled exception if the server isn't available.
@@ -44,9 +45,6 @@ def create_embedding(text, title, url):
     post(create_embedding_url, data=dumps(data), headers=headers)
 
 def create_embeddings(app, doctree, docname):
-    # TODO: Make this ignore logic more generic.
-    if 'ask_pigweed_ai' in docname:
-        return
     clone = deepcopy(doctree)
     title = find_title(clone)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
@@ -55,11 +53,14 @@ def create_embeddings(app, doctree, docname):
             xml = node.asdom().toxml()
             create_embedding(xml, title, url)
         except Exception as e:
+            headers = {'Content-Type': 'application/json'}
+            debug_data = {'title': title, 'url': url}
+            post(debug_url, data=dumps(debug_data), headers=headers)
             continue
 
 def setup(app):
     app.connect('builder-inited', init)
-    # app.connect('doctree-resolved', create_embeddings)
+    app.connect('doctree-resolved', create_embeddings)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,
