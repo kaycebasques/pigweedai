@@ -85,7 +85,7 @@ Ask Pigweed AI
    <p>
        Welcome! This is a prototype of a
        <a href="https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation">retrieval-augmented
-       generation</a> search experience for the <a href="https://pigweed.dev">Pigweed</a> docs.
+       generation</a> search experience for the <a href="https://pigweed.dev">Pigweed</a> docs. Notes:
    </p>
    <ul>
        <li>
@@ -98,8 +98,12 @@ Ask Pigweed AI
            quality assurance. They may also be logged publicly in the future.
        </li>
        <li>
-           See the <a href="https://github.com/kaycebasques/pigweedai/blob/main/README.md">README</a>
-           for more information.
+           The <s>cake</s> chat UI is a lie! The LLM won't remember your conversation
+           history. It's a known limitation.
+       </li>
+       <li>
+           See the <a href="https://github.com/kaycebasques/pigweedai">repo</a>
+           to see learn how the sausage is made!
        </li>
    </ul>
    <div id="pigweedai-output"></div>
@@ -115,7 +119,6 @@ Ask Pigweed AI
            send: document.querySelector('#pigweedai-send'),
            history: [],
        };
-       // TODO: renderSources and renderFeedbackWidgets
        window.pigweedai.renderMessage = (message, role, links, id) => {
            let label = document.createElement('p');
            let container = document.createElement('div');

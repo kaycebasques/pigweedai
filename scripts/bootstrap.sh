@@ -8,11 +8,6 @@ function bootstrap_docs_repo() {
     cd ..
 }
 
-# TODO: This fails because of the local dev checks.
-function build_docs() {
-    source scripts/build_docs.sh
-}
-
 function bootstrap_firebase() {
     cd src/firebase
     npm i
@@ -25,5 +20,4 @@ function bootstrap_firebase() {
 }
 
 bootstrap_docs_repo
-build_docs
 bootstrap_firebase
