@@ -89,12 +89,11 @@ Ask Pigweed AI
    </p>
    <ul>
        <li>
-           This is not an official Google product. This is a hacked together prototype by Kayce Basques.
-           I am a Googler but I have not sought out permission to publish this prototype.
+           <b>This is not an official Google product.</b> This is a personal prototype by Kayce Basques.
            All responsibility my own.
        </li>
        <li>
-           DO NOT ENTER PERSONAL OR CONFIDENTIAL INFORMATION!!!
+           <b>DO NOT ENTER PERSONAL OR CONFIDENTIAL INFORMATION!!!</b>
            Your messages are sent to OpenAI. They're also logged in Firestore for
            quality assurance. They may also be logged publicly in the future.
        </li>
@@ -144,12 +143,12 @@ Ask Pigweed AI
            container.append(reply);
            if (links) {
                let sourcesContainer = document.createElement('ul');
-               let anchors = '';
+               let html = '<p>Sources:</p>';
                links.forEach(link => {
                    const anchor = `<li><a href="${link.url}">${link.title}</a></li>`;
-                   anchors += anchor;
+                   html += anchor;
                });
-               sourcesContainer.innerHTML = anchors;
+               sourcesContainer.innerHTML = html;
                container.append(sourcesContainer);
            }
            if (id) {
