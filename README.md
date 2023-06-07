@@ -65,3 +65,40 @@ and sends off a request to the Firebase Functions server to generate
 an embedding for each section.
 
 At this point you should be good to go!
+
+## Software architecture
+
+This section is a general overview of how this project works end-to-end.
+If you are familiar with [retrieval-augmented generation] (RAG) then you
+can probably skim this section. `pigweedai` is a textbook RAG architecture.
+
+Note: `//` means the root directory of this repository.
+
+1. The bootstrap script (`//scripts/bootstrap.sh`) clones the Pigweed docs repo to
+   `//pigweed` and installs Firebase dependencies (`//src/firebase/node_modules` and
+   `//src/firebase/functions/venv`).
+2. Before building the docs, the Firebase Functions server needs to be deployed or
+   spun up locally. It handles a lot of the embedding generation logic that occurs
+   during the docs build.
+3. The build script (`//scripts/build_docs.sh`) copies the Sphinx extension 
+   (`//src/sphinx/embeddings.py`) and frontend web UI (`//src/sphinx/ask_pigweed_ai.rst`)
+   to the Pigweed docs repo. The build script kicks off the Pigweed docs build.
+4. During the docs build, the Sphinx extension hooks into the Sphinx build lifecycle.
+   The Sphinx build system calls the extension every time that it processes a doc
+   into HTML. The Sphinx extension is able to parse each doc into sections. The
+   extension sends a request to the Firebase Functions server to generate an embedding
+   for each section. In other words, the extension is a [thin client]. The server is
+   doing the heavy lifting. The embeddings and section text are stored in Firestore. An
+   MD5 hash is generated for each section based on the section's text. This hash
+   is essentially the [unique key](https://www.javatpoint.com/primary-key-vs-unique-key).
+5. There is a separate, manual process for deploying the web frontend to GitHub Pages.
+   This deployment is based on GitHub Actions.
+6. When the generative search experience is running on GitHub Pages, user queries
+   are sent to the Firebase Functions server. The server performs a semantic search
+   of the user query against the embeddings database, assembles the documentation
+   context, interacts with the LLM, and sends the response back to the web UI.
+7. The web UI just renders the data from the Firebase Functions server. It is
+   also a [thin client].
+
+[retrieval-augmented generation]: https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation
+[thin client]: https://en.wikipedia.org/wiki/Thin_client
