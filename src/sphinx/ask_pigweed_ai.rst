@@ -98,8 +98,8 @@ Ask Pigweed AI
            quality assurance. They may also be logged publicly in the future.
        </li>
        <li>
-           The <s>cake</s> chat UI is a lie! The LLM won't remember your conversation
-           history. It's a known limitation.
+           The <s>cake</s> chat UI is a lie! <b>The LLM won't remember your conversation
+           history.</b> It's a known limitation.
        </li>
        <li>
            See the <a href="https://github.com/kaycebasques/pigweedai">repo</a>
