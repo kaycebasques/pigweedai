@@ -85,7 +85,8 @@ Ask Pigweed AI
    <p>
        Welcome! This is a prototype of a
        <a href="https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation">retrieval-augmented
-       generation</a> search experience for the <a href="https://pigweed.dev">Pigweed</a> docs. Notes:
+       generation</a> search experience for the <a href="https://pigweed.dev">Pigweed</a> docs. Here's the
+       <a href="https://github.com/kaycebasques/pigweedai">source code</a>. Important notes:
    </p>
    <ul>
        <li>
@@ -95,17 +96,14 @@ Ask Pigweed AI
        <li>
            <b>DO NOT ENTER PERSONAL OR CONFIDENTIAL INFORMATION!!!</b>
            Your messages are sent to OpenAI. They're also logged in Firestore for
-           quality assurance. They may also be logged publicly in the future.
+           quality assurance.
        </li>
        <li>
            The <s>cake</s> chat UI is a lie! <b>The LLM won't remember your conversation
            history.</b> It's a known limitation.
        </li>
-       <li>
-           See the <a href="https://github.com/kaycebasques/pigweedai">repo</a>
-           to see learn how the sausage is made!
-       </li>
    </ul>
+   <p>Thanks for trying it out! Please <b>leave feedback with the in-message widget</b>.</p>
    <div id="pigweedai-output"></div>
    <div id="pigweedai-input">
        <textarea id="pigweedai-textbox" rows="3" placeholder="Ask Pigweed AI something..."></textarea>
