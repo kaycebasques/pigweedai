@@ -102,3 +102,53 @@ Note: `//` means the root directory of this repository.
 
 [retrieval-augmented generation]: https://developers.google.com/machine-learning/glossary#retrieval-augmented-generation
 [thin client]: https://en.wikipedia.org/wiki/Thin_client
+
+### Database schemas
+
+Here's the gist of how the Firestore data is laid out. I don't know how to do
+proper database schema representation but hopefully this gets the general idea
+across clear enough.
+
+Things wrapped in carats e.g. `<checksum of section's text>` are descriptions
+of the field, not literal values. Things just wrapped in quotes e.g. `"openai"`
+are literal values.
+
+#### Embeddings
+
+```
+{
+    <checksum of section's text>: {
+        "openai": <array of thousands of floats representing the embedding>,
+        "openai_token_count": <number of tokens in the text>,
+        "text": <the full text of the section>,
+        "timestamp": <epoch timestamp representing the freshness of the section text>,
+        "title": <title of the page where the section text is found>,
+        "url": <URL where the section text is found>
+    },
+    ...
+}
+```
+
+#### Chats
+
+```
+{
+    <random UUID for this session>: {
+        "history": [
+            {
+                "content": <the user's message>,
+                "question_id": <a message ID based off a timestamp>,
+                "role": "user"
+            },
+            {
+                "content": <the LLM's response>,
+                "question_id": <the message ID of the question that the LLM responded to>,
+                "feedback": <user feedback about the response>,
+                "reply_id": <a message ID based off a timestamp for this response>,
+                "role": "assistant"
+            },
+            ...
+        ],
+    },
+    ...
+}
