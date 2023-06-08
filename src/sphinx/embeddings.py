@@ -63,7 +63,7 @@ def create_embeddings(app, doctree, docname):
 
 def setup(app):
     app.connect('builder-inited', init)
-    app.connect('doctree-resolved', create_embeddings)
+    # app.connect('doctree-resolved', create_embeddings)
     return {
         'version': '0.0.0',
         'parallel_read_safe': True,

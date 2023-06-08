@@ -12,28 +12,24 @@ Ask Pigweed AI
            --pigweedai-spacing: 1em;
            --pigweedai-border-width: 3px;
            --pigweedai-neutral-color: lightgrey;
-           --pigweedai-message-width: 80%;
-           --pigweedai-message-margin: 20%;
        }
        #pigweedai-input {
            width: 100%;
-           max-width: 100%;
-           display: flex;
-           align-items: center;
            margin-top: var(--pigweedai-spacing);
        }
        #pigweedai-textbox {
-           width: 90%;
-           display: block;
-           margin-right: var(--pigweedai-spacing);
            padding: var(--pigweedai-spacing);
            border: var(--pigweedai-border-width) solid var(--pigweedai-neutral-color);
            border-radius: var(--pigweedai-border-radius);
+           width: 100%;
+           box-sizing: border-box;
+           display: block;
        }
        #pigweedai-send {
+           margin: var(--pigweedai-border-radius) 0 0 auto;
            padding: var(--pigweedai-spacing);
            border-radius: var(--pigweedai-border-radius);
-           margin-top: var(--pigweedai-border-radius);
+           display: block;
        }
        .pigweedai-label {
            font-style: italic;
@@ -48,8 +44,7 @@ Ask Pigweed AI
        .pigweedai-output-user {
            background-color: #dcf8c6;
            color: black;
-           max-width: var(--pigweedai-message-width);
-           margin-left: var(--pigweedai-message-margin);
+           max-width: 100%;
            padding: var(--pigweedai-spacing);
            border-radius: var(--pigweedai-border-radius);
            overflow-x: scroll;
@@ -57,7 +52,7 @@ Ask Pigweed AI
        .pigweedai-output-assistant {
            background-color: white;
            color: black;
-           max-width: var(--pigweedai-message-width);
+           max-width: 100%;
            padding: var(--pigweedai-spacing);
            border: var(--pigweedai-border-width) solid #b529aa;
            border-radius: var(--pigweedai-border-radius);
@@ -66,14 +61,15 @@ Ask Pigweed AI
        .pigweedai-feedback-textbox {
            border-radius: var(--pigweedai-border-radius);
            padding: var(--pigweedai-spacing);
-           margin-right: var(--pigweedai-spacing);
            width: 100%;
+           box-sizing: border-box;
            display: block;
        }
        .pigweedai-feedback-button {
            border-radius: var(--pigweedai-border-radius);
            padding: var(--pigweedai-spacing);
-           margin-top: var(--pigweedai-spacing);
+           margin: var(--pigweedai-border-radius) 0 0 auto;
+           display: block;
        }
    </style>
    <p>
@@ -101,7 +97,7 @@ Ask Pigweed AI
    <div id="pigweedai-output"></div>
    <div id="pigweedai-input">
        <textarea id="pigweedai-textbox" rows="5" placeholder="Ask Pigweed AI something..."></textarea>
-       <button id="pigweedai-send">Send</button>
+       <button id="pigweedai-send">Ask Pigweed AI</button>
    </div>
    <script>
        window.pigweedai = {
@@ -155,7 +151,7 @@ Ask Pigweed AI
                textbox.placeholder = 'Leave feedback on this reply...';
                textbox.classList.add('pigweedai-feedback-textbox');
                let button = document.createElement('button');
-               button.textContent = 'Send';
+               button.textContent = 'Send Feedback';
                button.classList.add('pigweedai-feedback-button');
                button.addEventListener('click', () => {
                    const body = {
@@ -177,7 +173,7 @@ Ask Pigweed AI
                            'https://server-ic22qaceya-uc.a.run.app/send_feedback';
                    fetch(url, options).catch(error => console.log(error));
                    document.querySelector(`#${id}`).value = '';
-                   document.querySelector(`#${id}`).placeholder = 'Feedback sent!';
+                   document.querySelector(`#${id}`).placeholder = 'Feedback sent! You can send again, but it will overwrite your previous comment.';
                });
                idContainer.append(textbox);
                idContainer.append(button);

@@ -3,9 +3,15 @@
 An experimental prototype of a retrieval-augmented generation search experience
 for the [Pigweed](https://pigweed.dev) docs.
 
-## Setup
+## Live demo
 
-Assumptions: I've only developed/tested this project on Debian-flavored Linux computers.
+<https://kaycebasques.github.io/pigweedai/ask_pigweed_ai.html>
+
+## Prereqs
+
+I've only developed/tested this project on Debian-flavored Linux computers.
+
+## Setup
 
 TODO: There is a little logic in a couple of the files that essentially makes
 the local development only work on my computers. When this TODO is removed, it
