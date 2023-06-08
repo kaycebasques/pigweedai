@@ -23,8 +23,8 @@ Ask Pigweed AI
            margin-top: var(--pigweedai-spacing);
        }
        #pigweedai-textbox {
-           width: 75%;
-           max-width: 75%;
+           width: 90%;
+           display: block;
            margin-right: var(--pigweedai-spacing);
            padding: var(--pigweedai-spacing);
            border: var(--pigweedai-border-width) solid var(--pigweedai-neutral-color);
@@ -33,6 +33,7 @@ Ask Pigweed AI
        #pigweedai-send {
            padding: var(--pigweedai-spacing);
            border-radius: var(--pigweedai-border-radius);
+           margin-top: var(--pigweedai-border-radius);
        }
        .pigweedai-label {
            font-style: italic;
@@ -62,24 +63,17 @@ Ask Pigweed AI
            border-radius: var(--pigweedai-border-radius);
            overflow-x: scroll;
        }
-       .pigweedai-output-assistant {
-           background-color: white;
-           color: black;
-           max-width: var(--pigweedai-message-width);
-           padding: var(--pigweedai-spacing);
-           border: var(--pigweedai-border-width) solid #b529aa;
-           border-radius: var(--pigweedai-border-radius);
-           overflow-x: scroll;
-       }
        .pigweedai-feedback-textbox {
            border-radius: var(--pigweedai-border-radius);
            padding: var(--pigweedai-spacing);
            margin-right: var(--pigweedai-spacing);
-           width: 75%;
+           width: 100%;
+           display: block;
        }
        .pigweedai-feedback-button {
            border-radius: var(--pigweedai-border-radius);
            padding: var(--pigweedai-spacing);
+           margin-top: var(--pigweedai-spacing);
        }
    </style>
    <p>
@@ -106,7 +100,7 @@ Ask Pigweed AI
    <p>Thanks for trying it out! Please <b>leave feedback with the in-message widget</b>.</p>
    <div id="pigweedai-output"></div>
    <div id="pigweedai-input">
-       <textarea id="pigweedai-textbox" rows="3" placeholder="Ask Pigweed AI something..."></textarea>
+       <textarea id="pigweedai-textbox" rows="5" placeholder="Ask Pigweed AI something..."></textarea>
        <button id="pigweedai-send">Send</button>
    </div>
    <script>
@@ -154,7 +148,8 @@ Ask Pigweed AI
            }
            if (id) {
                let idContainer = document.createElement('div');
-               let textbox = document.createElement('input');
+               let textbox = document.createElement('textarea');
+               textbox.rows = 3;
                textbox.type = 'text';
                textbox.id = id;
                textbox.placeholder = 'Leave feedback on this reply...';
