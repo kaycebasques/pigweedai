@@ -48,13 +48,6 @@ def create_embedding(text, title, url):
     response = post(create_embedding_url, data=dumps(data), headers=headers)
     return response.json()
 
-def create_embeddings(app,doctree,docname):
-    for node in doctree.traverse(section):
-        a = admonition()
-        a += title('note', 'Pigweed AI summary')
-        a += paragraph(text='How does this look?')
-        node.insert(1, a)
-
 def create_embeddings(app, doctree, docname):
     # clone = deepcopy(doctree)
     title = find_title(doctree)
