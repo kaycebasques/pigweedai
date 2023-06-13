@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-from docutils.nodes import section, paragraph, Text
+from docutils.nodes import section, Text, admonition, title, paragraph
 from hashlib import md5
 from json import dumps
 from copy import deepcopy
@@ -59,10 +59,10 @@ def create_embeddings(app, doctree, docname):
             summary = data['summary'] if 'summary' in data else None
             if summary is None:
                 return
-            p = paragraph()
-            p += Text(f'Pigweed AI summary: {summary}')
-            p.attributes['style'] = 'border: 3px solid lightgray'
-            node.insert(1, p)
+            a = admonition()
+            a += title('tip', 'Pigweed AI summary')
+            a += paragraph(text=summary)
+            node.insert(1, a)
         except Exception as e:
             headers = {'Content-Type': 'application/json'}
             debug_data = {'title': title, 'url': url}
