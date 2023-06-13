@@ -124,14 +124,19 @@ def create_openai_embedding(text):
 def get_openai_token_count(text):
     return len(openai_encoder.encode(text))
 
+# TODO: This is probably not getting saved because earlier in the process
+# all the data is getting clobbered.
 def create_summary(checksum, text):
     print('create_summary()')
     print(checksum)
     try:
         ref = embeddings.document(checksum)
         doc = ref.get()
+        data = {}
         if doc.exists:
+            print('doc found')
             data = doc.to_dict()
+            print(data.keys())
             if 'summary' in data:
                 print('summary found')
                 return data['summary']
@@ -145,6 +150,7 @@ def create_summary(checksum, text):
         response = openai.ChatCompletion.create(model=model, messages=messages,
                 temperature=0, max_tokens=100)
         summary = response['choices'][0]['message']['content']
+        data['summary'] = summary
         ref.set({'summary': summary}, merge=True)
         return summary
     except Exception as e:
