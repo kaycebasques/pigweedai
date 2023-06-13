@@ -216,6 +216,9 @@ def create_embedding():
                 print('Embeddings data OK...')
                 data['openai'] = firestore_data['openai']
                 data['openai_token_count'] = firestore_data['openai_token_count']
+            # TODO: Refactor this.
+            if 'summary' in firestore_data:
+                data['summary'] = firestore_data['summary']
         else:
             print('Doc did not exist...')
             data['openai'] = create_openai_embedding(text)
