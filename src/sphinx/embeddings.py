@@ -49,10 +49,10 @@ def create_embedding(text, title, url):
     return response.json()
 
 def create_embeddings(app, doctree, docname):
-    clone = deepcopy(doctree)
-    title = find_title(clone)
+    # clone = deepcopy(doctree)
+    title = find_title(doctree)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
-    for node in clone.traverse(section):
+    for node in doctree.traverse(section):
         try:
             xml = node.asdom().toxml()
             data = create_embedding(xml, title, url)
