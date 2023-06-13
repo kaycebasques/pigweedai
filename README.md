@@ -5,7 +5,7 @@ for the [Pigweed](https://pigweed.dev) docs.
 
 ## Live demo
 
-<https://kaycebasques.github.io/pigweedai/ask_pigweed_ai.html>
+<https://kaycebasques.github.io/pigweedai/docs/ask_pigweed_ai.html>
 
 ## Prereqs
 
