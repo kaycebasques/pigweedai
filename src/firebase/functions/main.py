@@ -124,6 +124,33 @@ def create_openai_embedding(text):
 def get_openai_token_count(text):
     return len(openai_encoder.encode(text))
 
+def create_summary(checksum, text):
+    print('create_summary()')
+    print(checksum)
+    try:
+        ref = embeddings.document(checksum)
+        doc = ref.get()
+        if doc.exists:
+            data = doc.to_dict()
+            if 'summary' in data:
+                print('summary found')
+                return data['summary']
+        print('generating summary')
+        instruction = f'Output a single plain text paragraph. Summarize this: {text}'
+        messages = [{
+            'role': 'user',
+            'content': instruction
+        }]
+        model = 'gpt-3.5-turbo'
+        response = openai.ChatCompletion.create(model=model, messages=messages,
+                temperature=0, max_tokens=100)
+        summary = response['choices'][0]['message']['content']
+        ref.set({'summary': summary}, merge=True)
+        return summary
+    except Exception as e:
+        print(e)
+        return None
+
 ##############
 # URL handlers
 ##############
@@ -189,8 +216,11 @@ def create_embedding():
             data['openai_token_count'] = get_openai_token_count(text)
         data['timestamp'] = get_timestamp()
         ref.set(data)
-        return {'ok': True}
+        summary = create_summary(checksum, text)
+        print(f'Summary: {summary}')
+        return {'summary': summary}
     except Exception as e:
+        print(e)
         return {'ok': False}
 
 @app.post('/send_feedback')
@@ -239,7 +269,7 @@ def ping():
 def version():
     return {'version': '1.0.0'}
 
-@https_fn.on_request(timeout_sec=120, memory=MemoryOption.GB_1)
+@https_fn.on_request(timeout_sec=30, memory=MemoryOption.GB_1)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()

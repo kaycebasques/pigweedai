@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-from docutils.nodes import section
+from docutils.nodes import section, paragraph, Text
 from hashlib import md5
 from json import dumps
 from copy import deepcopy
@@ -45,7 +45,8 @@ def create_embedding(text, title, url):
         'title': title,
         'url': url
     }
-    post(create_embedding_url, data=dumps(data), headers=headers)
+    response = post(create_embedding_url, data=dumps(data), headers=headers)
+    return response.json()
 
 def create_embeddings(app, doctree, docname):
     clone = deepcopy(doctree)
@@ -54,7 +55,14 @@ def create_embeddings(app, doctree, docname):
     for node in clone.traverse(section):
         try:
             xml = node.asdom().toxml()
-            create_embedding(xml, title, url)
+            data = create_embedding(xml, title, url)
+            summary = data['summary'] if 'summary' in data else None
+            if summary is None:
+                return
+            p = paragraph()
+            p += Text(f'Pigweed AI summary: {summary}')
+            p.attributes['style'] = 'border: 3px solid lightgray'
+            node.insert(1, p)
         except Exception as e:
             headers = {'Content-Type': 'application/json'}
             debug_data = {'title': title, 'url': url}
