@@ -50,8 +50,6 @@ def create_embedding(text, title, url):
     return json['summary']
 
 def create_embeddings(app, doctree, docname):
-    if 'pw_bluetooth' not in docname:
-        return
     # clone = deepcopy(doctree)
     title = find_title(doctree)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
