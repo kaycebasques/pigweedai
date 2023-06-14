@@ -46,23 +46,25 @@ def create_embedding(text, title, url):
         'url': url
     }
     response = post(create_embedding_url, data=dumps(data), headers=headers)
-    return response.json()
+    json = response.json()
+    return json['summary']
 
 def create_embeddings(app, doctree, docname):
+    if 'pw_bluetooth' not in docname:
+        return
     # clone = deepcopy(doctree)
     title = find_title(doctree)
     url = f'https://pigweed.dev/{app.builder.get_target_uri(docname)}'
     for node in doctree.traverse(section):
         try:
             xml = node.asdom().toxml()
-            data = create_embedding(xml, title, url)
-            summary = data['summary'] if 'summary' in data else None
+            summary = create_embedding(xml, title, url)
             if summary is None:
-                return
-            a = admonition()
-            a += title('note', 'Pigweed AI summary')
-            a += paragraph(text=summary)
-            node.insert(1, a)
+                summary = 'Not Available'
+            p = paragraph()
+            p += Text(f'Pigweed AI summary: {summary}')
+            p.attributes['style'] = 'border: 3px solid lightgray'
+            node.insert(1, p)
         except Exception as e:
             headers = {'Content-Type': 'application/json'}
             debug_data = {'title': title, 'url': url}
