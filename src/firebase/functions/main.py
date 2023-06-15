@@ -1,7 +1,7 @@
 from firebase_functions import https_fn
 from firebase_functions.options import MemoryOption
 from firebase_admin import initialize_app, firestore, credentials
-from json import load, dumps
+from json import load, dumps, dump
 from flask import Flask, request
 from flask_cors import CORS
 from time import time
@@ -276,7 +276,7 @@ def ping():
 
 @app.get('/version')
 def version():
-    return {'version': '1.0.0'}
+    return {'version': '0.0.0'}
 
 @https_fn.on_request(timeout_sec=30, memory=MemoryOption.GB_1)
 def server(req: https_fn.Request) -> https_fn.Response:
