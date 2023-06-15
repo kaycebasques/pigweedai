@@ -17,7 +17,7 @@ version_url = f'{url}/version'
 chat_url = f'{url}/chat'
 unescaped_version = get(version_url).json()['version']
 version = unescaped_version.replace('.', '_')
-data_dir = version
+data_dir = f'eval-{version}'
 mkdir(data_dir)
 
 # Save the embeddings database
