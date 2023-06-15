@@ -280,7 +280,7 @@ def ping():
 def version():
     return {'version': '0.0.0'}
 
-@https_fn.on_request(timeout_sec=90, memory=MemoryOption.GB_1)
+@https_fn.on_request(timeout_sec=120, memory=MemoryOption.GB_1)
 def server(req: https_fn.Request) -> https_fn.Response:
     with app.request_context(req.environ):
         return app.full_dispatch_request()
