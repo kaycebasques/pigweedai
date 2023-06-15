@@ -46,8 +46,8 @@ for category in questions:
         json = response.json()
         reply = json['reply']
         results[question] = reply
-with open(f'{data_dir}/eval.json', 'w') as f:
-    dump(results, f, indent=4)
+        with open(f'{data_dir}/eval.json', 'w') as f:
+            dump(results, f, indent=4)
 
 # Cleanup
 with ZipFile(f'{version}.zip', 'w') as z:
