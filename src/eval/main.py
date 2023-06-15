@@ -26,7 +26,7 @@ for doc in docs:
     checksum = doc.id
     data[checksum] = doc.to_dict()
 with open(f'{data_dir}/embeddings.json', 'w') as f:
-    dump(data, f)
+    dump(data, f, indent=4)
 
 # Run the eval tests and save the results
 questions = None
@@ -47,7 +47,7 @@ for category in questions:
         reply = json['reply']
         results[question] = reply
 with open(f'{data_dir}/eval.json', 'w') as f:
-    dump(results, f)
+    dump(results, f, indent=4)
 
 # Cleanup
 with ZipFile(f'{version}.zip', 'w') as z:
