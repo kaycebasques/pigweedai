@@ -188,8 +188,10 @@ def chat():
         history.append({'role': 'assistant', 'content': reply, 'question_id': question_id, 'reply_id': reply_id})
         ref = chats.document(uuid)
         ref.set({'history': history})
-        html = markdown(reply, extensions=['markdown.extensions.fenced_code'])
-        return {'reply': html, 'history': history, 'links': links, 'id': reply_id}
+        mode = data['mode']
+        if mode == 'html':
+            reply = markdown(reply, extensions=['markdown.extensions.fenced_code'])
+        return {'reply': reply, 'history': history, 'links': links, 'id': reply_id}
     except Exception as e:
         print(e)
         return {'ok': False}

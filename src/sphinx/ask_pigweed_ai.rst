@@ -194,7 +194,8 @@ Ask Pigweed AI
            const body = {
                'message': message,
                'uuid': window.pigweedai.uuid,
-               'history': window.pigweedai.history
+               'history': window.pigweedai.history,
+               'mode': 'html',
            };
            const options = {
                method: 'POST',

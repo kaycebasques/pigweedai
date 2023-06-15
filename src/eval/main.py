@@ -39,7 +39,8 @@ for category in questions:
         data = {
             'message': question,
             'uuid': f'eval-{version}',
-            'history': []
+            'history': [],
+            'mode': None,
         }
         response = post(chat_url, data=dumps(data), headers=headers)
         json = response.json()
