@@ -36,15 +36,31 @@ with open('src/eval/questions.json', 'r') as f:
 headers = {'Content-Type': 'application/json'}
 for category in questions:
     for question in questions[category]['questions']:
+        print(question)
+        print()
         data = {
             'message': question,
             'uuid': f'eval-{version}',
             'history': [],
             'mode': None,
         }
-        response = post(chat_url, data=dumps(data), headers=headers)
-        json = response.json()
-        reply = json['reply']
+        retries = 0
+        reply = None
+        while retries < 5:
+            try:
+                response = post(chat_url, data=dumps(data), headers=headers)
+                json = response.json()
+                if 'reply' not in json:
+                    raise ValueError('Not a usable response from OpenAI...')
+                reply = json['reply']
+            except Exception as e:
+                retries += 1
+                continue
+            break
+        if reply is None:
+            raise ValueError('OpenAI did not provide a usable response even after retries...')
+        print(reply)
+        print()
         results[question] = reply
         with open(f'{data_dir}/eval.json', 'w') as f:
             dump(results, f, indent=4)
