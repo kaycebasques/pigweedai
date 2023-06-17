@@ -27,12 +27,12 @@ chats = firestore_client.collection('chats')
 app = Flask(__name__)
 CORS(app)
 openai.api_key = env['openai']
-openai_embedding_model = 'text-embedding-ada-002'
+embedding_model = 'text-embedding-ada-002'
 openai_encoder = get_encoding('cl100k_base')
-openai_chat_model = 'gpt-3.5-turbo'
-openai_total_token_limit = 4096
-openai_input_token_limit = 2800
-openai_output_token_limit = 1000
+chat_model = 'gpt-3.5-turbo-16k-0613'
+total_token_limit = 16384
+input_token_limit = 10000
+output_token_limit = 5000
 # Load the Firestore embeddings data to the in-memory "database".
 docs = embeddings.stream()
 for doc in docs:
@@ -77,9 +77,9 @@ def find_relevant_docs(target):
     results = []
     for item in distances:
         checksum = item['checksum']
-        if current_token_count > openai_input_token_limit:
+        if current_token_count > input_token_limit:
             continue
-        if current_token_count + item['token_count'] > openai_input_token_limit:
+        if current_token_count + item['token_count'] > input_token_limit:
             continue
         if 'text' not in database[checksum]:
             ref = embeddings.document(checksum)
@@ -118,7 +118,7 @@ def create_context(message):
     return {'context': context, 'links': links}
 
 def create_openai_embedding(text):
-    response = openai.Embedding.create(input=[text], model=openai_embedding_model)
+    response = openai.Embedding.create(input=[text], model=embedding_model)
     return response['data'][0]['embedding']
 
 def get_openai_token_count(text):
@@ -146,8 +146,7 @@ def create_summary(checksum, text):
             'role': 'user',
             'content': instruction
         }]
-        model = 'gpt-3.5-turbo'
-        response = openai.ChatCompletion.create(model=model, messages=messages,
+        response = openai.ChatCompletion.create(model=chat_model, messages=messages,
                 temperature=0, max_tokens=100)
         summary = response['choices'][0]['message']['content']
         data['summary'] = summary
@@ -176,8 +175,8 @@ def chat():
         context = context_data['context']
         links = context_data['links']
         messages = {'role': 'user', 'content': context}
-        response = openai.ChatCompletion.create(model='gpt-3.5-turbo', messages=[messages],
-                temperature=0, max_tokens=openai_output_token_limit)
+        response = openai.ChatCompletion.create(model=chat_model, messages=[messages],
+                temperature=0, max_tokens=output_token_limit)
         question_id = f'question{get_timestamp()}'
         messages['question_id'] = question_id
         # The history is only logged for our own analysis. It's not
@@ -278,7 +277,7 @@ def ping():
 
 @app.get('/version')
 def version():
-    return {'version': '0.0.0'}
+    return {'version': '1.0.0'}
 
 @https_fn.on_request(timeout_sec=120, memory=MemoryOption.GB_1)
 def server(req: https_fn.Request) -> https_fn.Response:
