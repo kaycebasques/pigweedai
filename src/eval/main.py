@@ -29,6 +29,14 @@ with open(f'{data_dir}/embeddings.json', 'w') as f:
     dump(data, f, indent=4)
 
 # Run the eval tests and save the results
+print(f'# v{unescaped_version}')
+print()
+print('## Summary')
+print()
+print('TODO')
+print()
+print('## Eval test results')
+print()
 questions = None
 results = {}
 with open('src/eval/questions.json', 'r') as f:
@@ -36,7 +44,7 @@ with open('src/eval/questions.json', 'r') as f:
 headers = {'Content-Type': 'application/json'}
 for category in questions:
     for question in questions[category]['questions']:
-        print(question)
+        print(f'### {question}')
         print()
         data = {
             'message': question,
@@ -59,7 +67,9 @@ for category in questions:
             break
         if reply is None:
             raise ValueError('OpenAI did not provide a usable response even after retries...')
-        print(reply)
+        print('```')
+        print(reply.replace('```', '\`\`\`'))
+        print('```')
         print()
         results[question] = reply
         with open(f'{data_dir}/eval.json', 'w') as f:
